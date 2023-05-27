@@ -79,7 +79,7 @@ function New-LexerID{
         #if($txt[$index] -eq '\'){
         if($txt[$index] -eq '\' -or $txt[$index] -eq "'"){
             $n = $txt[$index + 1]
-            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W'){
+            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P'){
                 $Value = $txt[$index] + $txt[$index + 1]
             }
             return [PSCustomObject]@{
@@ -650,6 +650,30 @@ function CreateSimpleFunction {
     }
     return $Closure
 }
+
+function Object2Text{
+  param(
+    $object
+  )
+
+  if($object.Type -cne 'CLOSURE'){
+    return $object.Value
+  }
+
+  $memory = $object.Context.Memory
+  if($memory.values.Count -eq 0){
+    return ""
+  }
+
+  $txt = "("
+  $memory.values | %{
+    $txt += "$(Object2Text $_), "
+  }
+  $txt = $txt.substring(0, $txt.Length - 2)
+  $txt += ")"
+  return $txt
+}
+
 function Calculette {
     param($Text = "(2+3)*4")
     $Context = [PSCustomObject]@{
@@ -759,7 +783,10 @@ function Calculette {
         if($Context.Values['context'].Value){
             Show-Context -Context $Context
         }
-        Write-Host $res.Computation.Value
+#        if($res.Computation.Type -ne 'CLOSURE'){
+#          Write-Host $res.Computation.Value
+#        }
+        Write-Host (Object2Text $res.Computation)
     }
 }
 
