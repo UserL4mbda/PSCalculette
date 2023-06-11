@@ -72,7 +72,7 @@ fact(0) = 1
 fact(5)
 > 120
 ```
-Another way to define factorial is to use the range operator '..' the reduce operator '&' and the multiplication function '\*'
+Another way to define factorial is to use the range operator ```..``` the reduce operator ```&``` and the multiplication function ```\*```
 ```
 fact(n) = (1..n & \*)
 fact(5)
@@ -80,7 +80,7 @@ fact(5)
 ```
 Instead of the operators one can use functions to define the factorial.
 - ```\R``` the function for the range operator
-- ```\*``` the function for the * operator
+- ```\*``` the function for the ```*``` operator
 - ```\&``` the function for the ```&``` operator but instead of ```\&``` we use ```'&``` defined as ```'&(x)=_(y)=(y&x)```
 - ```\O``` the function defined as ```\O(f)=_(g)=_(x)=(f(g(x)))```
 ```
