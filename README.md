@@ -78,7 +78,7 @@ fact(n) = (1..n & \*)
 fact(5)
 > 120
 ```
-Instead of the operators one can use functions to define the factorial.
+Instead of the operators one can use functions to write a point free definition of the factorial.
 - ```\R``` the function for the range operator
 - ```\*``` the function for the ```*``` operator
 - ```\&``` the function for the ```&``` operator but instead of ```\&``` we use ```'&``` defined as ```'&(x)=_(y)=(y&x)```
@@ -86,4 +86,3 @@ Instead of the operators one can use functions to define the factorial.
 ```
 fact = (('&.\*)`\O:(\R.1))
 ```
-The previous definition is a point free definition
