@@ -79,10 +79,10 @@ fact(5)
 > 120
 ```
 Instead of the operators one can use functions to define the factorial.
-- \R the function for the range operator
-- \* the function for the * operator
-- \& the function for the & operator but instead of \& we use '& defined as ```'&(x)=_(y)=(y&x)```
-- \O the function defined as ```\O(f)=_(g)=_(x)=(f(g(x)))```
+- ```\R``` the function for the range operator
+- ```\*``` the function for the * operator
+- ```\&``` the function for the ```&``` operator but instead of ```\&``` we use ```'&``` defined as ```'&(x)=_(y)=(y&x)```
+- ```\O``` the function defined as ```\O(f)=_(g)=_(x)=(f(g(x)))```
 ```
 fact = (('&.\*)`\O:(\R.1))
 ```
