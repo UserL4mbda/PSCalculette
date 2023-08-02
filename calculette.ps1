@@ -79,7 +79,7 @@ function New-LexerID{
         #if($txt[$index] -eq '\'){
         if($txt[$index] -eq '\' -or $txt[$index] -eq "'"){
             $n = $txt[$index + 1]
-            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P'){
+            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P' -or $n -eq 'R' -or $n -eq 'B'){
                 $Value = $txt[$index] + $txt[$index + 1]
             }
             return [PSCustomObject]@{
@@ -320,7 +320,7 @@ function DoParseMapReduce {
                 '&'  { $type = 'REDUCE'          }
                 '|'  { $type = 'PIPE'            }
                 '#'  { $type = 'FIRSTELEMENTS'   }
-                '@'  { $type = 'APPLIQUE'        }
+                '@'  { $type = 'ROND'        }
                 '.'  { $type = 'APPLIQUE'        }
                 'de' { $type = 'APPLIQUE'        }
                 '~'  { $type = 'FOLD'            }
@@ -328,6 +328,7 @@ function DoParseMapReduce {
                 '`'  { $type = 'OPERATORFUNCTION'}
                 '!!' { $type = 'BOUCLE'          }
                 '!'  { $type = 'ZIP'             }
+                '??' { $type = 'FILTER'          }
             }
             [PSCustomObject]@{
                 Text  = $right.Text
@@ -341,7 +342,7 @@ function DoParseMapReduce {
         }
         $ET        = (Get-Item 'function:New-ParserAnd').ScriptBlock
 #        $Operator = New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))
-        $Operator = New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) ))))))))
+        $Operator = New-ParserOr -LeftParser (New-ParserWord '??') -RightParser( New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))))))
         $Suite     = (DoParseQuestionMark)
 
         $ZeroOrMoreSums =
@@ -651,6 +652,13 @@ function CreateSimpleFunction {
     return $Closure
 }
 
+function affiche {
+  param(
+    $value
+  )
+  Write-Host $value
+}
+
 function Object2Text{
   param(
     $object
@@ -697,7 +705,9 @@ function Calculette {
         "\/(x)=_(y)=x/y"
         "'/(x)=_(y)=y/x"
         "\@(x)=_(y)=(x@y)"
-        "\|(x)=_(y)=(y@x)"
+        "'@(x)=_(y)=(y@x)"
+        "\|(x)=_(y)=(x|y)"
+        "'|(x)=_(y)=(y|x)"
         "\=(x)=_(y)=(x-y?0:1)"
         "\S(f)=_(x)=_(y)=(f(y)(x))"
         "\Z(f)=_(g)=_(h)=_(x)=(g(f de x)(h de x))"
@@ -719,9 +729,15 @@ function Calculette {
         "\W(f)=_(g)=_(x)=_(y)=_(z)=(f(g(x)(y))(z))"
         #Modulo
         "MOD(x)=_(y)=( x %% y )"
+        #Range
+        "\R(x)=_(y)=(x..y)"
+        "'R(x)=_(y)=(y..x)"
+        "RANGE(x)=_(y)=(x..y)"
         #Renvoie une paire
         "\P(x)=_(y)=(x,y)"
         "'P(x)=_(y)=(y,x)"
+        #Boolean
+        "\B(x)=(x?1:0)"
     )
     #taille = ( ('&(\+))`\O:('%(\C(1)))  )
     # lonngueur = ('~ (0 , 1|\+|\K))
@@ -751,7 +767,7 @@ function Calculette {
         if($calcul -cmatch '\s*LOAD(\s+(.+))?\s*$') { 
                     $Fichier = $Matches[2] ?? 'prog1.cal'
                     Write-Host "Chargement de **$($Fichier)**"
-                        $Context = LoadFile -FileName $Fichier -Context $Context; Continue }
+                        $Context = LoadFile2 -FileName $Fichier -Context $Context; Continue }
 
 
         $resultat = ($calcul | Convert-TextToParserInput | &(DoParseExecutable))
@@ -798,18 +814,79 @@ function LoadFile{
 
     $content = Get-Content -Path $FileName
 
-    foreach($index in (0..($content.Length - 1))){
-        Write-Host "$($index + 1) `t $($content[$index])"
-        $calcul = $content[$index]
-        if($calcul -match "^\s*$"){ continue }
-        if($calcul -match "^\s*#"){ continue }
-        $resultat = ($calcul | Convert-TextToParserInput | &(DoParseExecutable))
+
+    #foreach($index in (0..($content.Length - 1))){
+    :BOUCLE for($index = 0; $index -lt ($content.Length); $index++){
+        #Write-Host "$($index + 1) `t $($content[$index])"
+
+        $txt = ""
+        while((($calcul = $content[$index]) -notmatch "^\s*$") -or (($calcul = $content[$index]) -notmatch "^\s*#")){
+          Write-Host "$($index + 1) `t $($content[$index])"
+          #if($calcul -match "^\s*#"){ continue BOUCLE}
+          $txt += $calcul
+          $index++
+          if($index -ge $context.Length){ continue }
+        }
+        #$calcul = $content[$index]
+        #if($calcul -match "^\s*$"){ continue }
+        #if($calcul -match "^\s*#"){ continue }
+        #$resultat = ($calcul | Convert-TextToParserInput | &(DoParseExecutable))
+
+        $resultat = ($txt | Convert-TextToParserInput | &(DoParseExecutable))
         if($null -eq $resultat){
             Write-Host "No comprendo la palabra !" -ForegroundColor Red
-            Write-Host "Line: $($index + 1)" -ForegroundColor DarkGreen
-            Write-Host "$($content[$index])" -ForegroundColor DarkYellow
+            Write-Host "Line: $($index + 1)"       -ForegroundColor DarkGreen
+            Write-Host "$($content[$index])"       -ForegroundColor DarkYellow
             return $Context
         }
+        if($resultat.Index -ne $resultat.Text.Length){
+            Write-Host "Syntax error at char $($resultat.Index + 1)"
+            Write-Host $calcul
+            Write-Host "$(' ' * $resultat.Index)^" -ForegroundColor Red
+            return $Context
+        }
+        $res = ComputeAST -AST $resultat.Value -Context $Context
+        $Context = $res.Context
+    }
+
+    return $Context
+}
+
+function ligne_valide{
+  param(
+    $ligne
+  )
+  return ($ligne -notmatch "^\s*$") 
+}
+
+function LoadFile2{
+    param(
+        $FileName = 'prog1.cal',
+        $Context
+    )
+
+    $content = Get-Content -Path $FileName
+
+    for($index = 0; $index -lt ($content.Length); $index++){
+        $txt = ""
+        while(ligne_valide -ligne ($calcul = $content[$index])){
+          Write-Host "$($index + 1 ) `t $($content[$index])"
+          if($calcul -notmatch '^\s*#'){ $txt += $calcul }
+          $index++
+          if($index -ge $content.Length){ continue }
+        }
+
+        if($txt -match "^\s*$"){ continue }
+        Write-Host "Analyse de $txt"
+        $resultat = ($txt | Convert-TextToParserInput | &(DoParseExecutable))
+        
+        if($null -eq $resultat){
+            Write-Host "No comprendo la palabra !" -ForegroundColor Red
+            Write-Host "Line: $($index + 1)"       -ForegroundColor DarkGreen
+            Write-Host "$($content[$index])"       -ForegroundColor DarkYellow
+            return $Context
+        }
+
         if($resultat.Index -ne $resultat.Text.Length){
             Write-Host "Syntax error at char $($resultat.Index + 1)"
             Write-Host $calcul
@@ -1159,6 +1236,10 @@ function ComputeFUNCTIONEVAL{
             Context     = $Context
             Computation = New-ASTString -Value ($func.Value[$Right.Value])
         }
+    }
+
+    if($func.Type -eq 'EXTERNALFUNC'){
+      
     }
 
     if($func.Type -ne 'CLOSURE'){
@@ -1948,6 +2029,14 @@ function ComputeCOMPARAISONINF {
         Context     = $Context
         Computation = New-ASTInteger -Value $(if($TmpValue){1}else{0})
     }
+}
+
+function ComputeROND{
+    param(
+        $lhs,
+        $rhs,
+        $Context
+    )
 }
 
 function ComputeMULTIPLICATION {
