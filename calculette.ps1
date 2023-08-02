@@ -1091,6 +1091,9 @@ function ComputeAST{
         return ComputeADDARRAY -lhs $Left -rhs $Right -Context $NewContext
     }
 
+    if($AST.Type -eq 'ROND') {
+        return ComputeROND -lhs $Left -rhs $Right -Context $NewContext
+    }
 
     DiveIntoObject -Object $AST -depth 4
     [PSCustomObject]@{
@@ -1249,6 +1252,7 @@ DiveIntoObject -Object $func
             Computation = New-ASTError -Value "EVAL FUNCTION TYPE **$($func.Type)** not CLOSURE"
         }
     }
+
         $param          = $func.Parameters
         $EvalParam      = (ComputeAST -AST $rhs -Context $func.Context)
         $func.Context.Values[$param.Value] = $EvalParam.Computation
@@ -2037,6 +2041,39 @@ function ComputeROND{
         $rhs,
         $Context
     )
+    # Compose $lhs et $rhs
+
+    # On fera les test du type (if($lhs.Type -ne 'CLOSURE')...) apres
+    # Donc $lhs.Type -eq 'CLOSURE'
+    # et   $rhs.Type -eq 'CLOSURE'
+    #
+
+    $closure = [PSCustomObject]@{
+        Type    = 'CLOSURE'
+        Context = [PSCustomObject]@{
+            Parent = $Context
+	    Values = $Context.Values
+            Memory = @{}
+        }
+        Parameters = (New-ASTIdentifiant -Identifiant 'x')
+	Body       = [PSCustomObject]@{
+		Type  = 'FUNCTIONEVAL'
+		Left  = $lhs
+		Right =	[PSCustomObject]@{
+			Type  = 'FUNCTIONEVAL'
+			Left  = $rhs
+			Right = New-ASTIdentifiant -Identifiant 'x'
+		}
+	}
+        Value      = "Fonction composee de $($lhs.Value) et de $($rh.Value)"
+    }
+
+    return [PSCustomObject]@{
+        Context     = $Context
+        Computation = $closure
+    }
+    
+
 }
 
 function ComputeMULTIPLICATION {
