@@ -2065,7 +2065,7 @@ function ComputeROND{
 			Right = New-ASTIdentifiant -Identifiant 'x'
 		}
 	}
-        Value      = "Fonction composee de $($lhs.Value) et de $($rh.Value)"
+        Value      = "Fonction composee de $($lhs.Value) et de $($rhs.Value)"
     }
 
     return [PSCustomObject]@{
