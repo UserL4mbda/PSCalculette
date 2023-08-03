@@ -320,7 +320,7 @@ function DoParseMapReduce {
                 '&'  { $type = 'REDUCE'          }
                 '|'  { $type = 'PIPE'            }
                 '#'  { $type = 'FIRSTELEMENTS'   }
-                '@'  { $type = 'ROND'        }
+                '@'  { $type = 'ROND'            }
                 '.'  { $type = 'APPLIQUE'        }
                 'de' { $type = 'APPLIQUE'        }
                 '~'  { $type = 'FOLD'            }
@@ -1242,7 +1242,10 @@ function ComputeFUNCTIONEVAL{
     }
 
     if($func.Type -eq 'EXTERNALFUNC'){
-      
+      return [PSCustomObject]@{
+        Context = $Context
+        Computation = $null
+      }
     }
 
     if($func.Type -ne 'CLOSURE'){
