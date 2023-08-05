@@ -118,6 +118,7 @@ function New-LexerID{
         }
     }.GetNewClosure()
 }
+
 function DoParseExecutable{
     {
         param(
@@ -657,6 +658,7 @@ function affiche {
     $value
   )
   Write-Host $value
+  return $value
 }
 
 function Object2Text{
@@ -692,6 +694,7 @@ function Calculette {
             '_AUTOINIVARIABLE' = New-ASTInteger -Value 0
             'Vide' = New-ASTEnsembleVide
             '{}'   = New-ASTEnsembleVide
+            'affiche' = New-ASTExternalfunc -Func $Function:affiche
         }
     }
 
@@ -913,6 +916,7 @@ function New-ASTEnsembleVide {
         Value      = 'ENSEMBLE VIDE'
     }
 }
+
 function New-ASTGENERIC{
     param(
         $Type,
@@ -944,6 +948,26 @@ function New-ASTIdentifiant{
     New-ASTGENERIC -Type 'IDENTIFIANT' -Value $Identifiant
 }
 
+# EXTERNALFUNC
+function New-ASTExternalfunc {
+  param($Func)
+  [PSCustomObject]@{
+    Type = 'EXTERNALFUNC'
+    Func = $Func
+  }
+}
+
+function ASTTypeIs {
+  param($AST, $Type)
+
+  # Cas particulier des fonctions
+  if($Type -eq 'FUNCTION') {
+   return $AST.Type -eq 'CLOSURE' -or $AST.Type -eq 'EXTERNALFUNC'
+  }
+ 
+  return $AST.Type -eq $Type
+}
+
 function ComputeAST{
     param(
         $Context,
@@ -954,6 +978,7 @@ function ComputeAST{
     if( ($AST.Type -eq 'INTEGER') -or
         ($AST.Type -eq 'STRING' ) -or
         ($AST.Type -eq 'CLOSURE') -or
+        ($AST.Type -eq 'EXTERNALFUNC') -or
         ($AST.Type -eq 'ERROR')){
         return [PSCustomObject]@{
             Context = $Context
@@ -1228,6 +1253,7 @@ function ComputeFUNCTIONEVAL{
                 Computation = New-ASTError -Value "INDEX DE TEXTE NON ENTIER"
             }
         }
+
         if(($Right.Value -ge $func.Value.Length) -or ($Right.Value -lt 0)){
             return [PSCustomObject]@{
                 Context     = $Context
@@ -1244,7 +1270,7 @@ function ComputeFUNCTIONEVAL{
     if($func.Type -eq 'EXTERNALFUNC'){
       return [PSCustomObject]@{
         Context = $Context
-        Computation = $null
+        Computation = &($func.Func) $Right.Value
       }
     }
 
@@ -1496,6 +1522,7 @@ function ComputeREDUCE {
     $accu, $rest   = $Memoire.Keys | Sort-Object
     
     $ValeurAccu = $Memoire[$accu]
+
     if($null -eq $rest){
         return [PSCustomObject]@{
             Context = $LeftComputation.Context
@@ -1513,7 +1540,9 @@ function ComputeREDUCE {
         }
 
         $lambda = ComputeAST -Context $Context -AST $EvaluationFonction
+
         if($lambda.Computation.Type -eq 'ERROR')  { return $lambda }
+
         if($lambda.Computation.Type -ne 'CLOSURE'){
             return [PSCustomObject]@{
                 Context = $Context
@@ -1526,7 +1555,9 @@ function ComputeREDUCE {
             Left  = $lambda.Computation
             Right = $ValeurClef
         }
+
         $resultat = ComputeAST -Context $lambda.Context -AST $EvaluationLambda
+
         if($resultat.Computation.Type -eq 'ERROR'){ return $resultat }
 
         $ValeurAccu = $resultat.Computation
@@ -1542,10 +1573,13 @@ function Convert-STRINGtoCLOSURE {
     param(
         $ASTString
     )
+
     $Memory = @{}
+
     foreach($index in (0..($ASTString.Value.length - 1))){
         $Memory[$index] = New-ASTString -Value $ASTString.Value[$index]
     }
+
     $closure = [PSCustomObject]@{
         Type       = 'CLOSURE'
         Context    = [PSCustomObject]@{
@@ -1557,8 +1591,10 @@ function Convert-STRINGtoCLOSURE {
         Body       = New-ASTError  -Value 'VALEUR INDEFINIE'
         Value      = $ASTString.Value
     }
+
     return $closure
 }
+
 function ComputeMAP{
     param(
         $lhs,
@@ -1582,15 +1618,17 @@ function ComputeMAP{
     }
 
     if($LeftComputation.Type -ne 'CLOSURE'){
-    Write-Host "DIVE LEFT:" -ForegroundColor Red
-    DiveIntoObject -Object $LeftComputation
-        return [PSCustomObject]@{
-            Context = $Context
-            Computation = New-ASTError -Value "MAP FUNCTION TYPE **$($LeftComputation.Type)** not CLOSURE"
-        }
+#    if(!(ASTTypeIs -AST $LeftComputation -Type 'FUNCTION')){
+      Write-Host "DIVE LEFT:" -ForegroundColor Red
+      DiveIntoObject -Object $LeftComputation
+      return [PSCustomObject]@{
+          Context = $Context
+          Computation = New-ASTError -Value "MAP FUNCTION TYPE **$($LeftComputation.Type)** not CLOSURE"
+      }
     }
 
-    if(!($RightComputation.Type -eq 'CLOSURE' -or $RightComputation.Type -eq 'STRING')){
+#    if(!($RightComputation.Type -eq 'CLOSURE' -or $RightComputation.Type -eq 'STRING')){
+    if(!((ASTTypeIs -AST $RightComputation -Type 'FUNCTION') -or $RightComputation.Type -eq 'STRING')){
     Write-Host "DIVE RIGHT:" -ForegroundColor Red
     DiveIntoObject -Object $RightComputation
         return [PSCustomObject]@{
