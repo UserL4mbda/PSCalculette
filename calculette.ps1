@@ -657,7 +657,16 @@ function affiche {
   param(
     $value
   )
-  Write-Host $value
+  Write-Host -nonewline $value.Value
+  return $value
+}
+
+function affichenl {
+  param(
+    $value
+  )
+  
+  Write-Host $value.Value
   return $value
 }
 
@@ -686,6 +695,7 @@ function Object2Text{
 
 function Calculette {
     param($Text = "(2+3)*4")
+    
     $Context = [PSCustomObject]@{
         Parent = $null
         Values = @{
@@ -694,7 +704,8 @@ function Calculette {
             '_AUTOINIVARIABLE' = New-ASTInteger -Value 0
             'Vide' = New-ASTEnsembleVide
             '{}'   = New-ASTEnsembleVide
-            'affiche' = New-ASTExternalfunc -Func $Function:affiche
+            'affiche'   = New-ASTExternalfunc -Func $Function:affiche
+            'affichenl' = New-ASTExternalfunc -Func $Function:affichenl
         }
     }
 
@@ -742,12 +753,15 @@ function Calculette {
         #Boolean
         "\B(x)=(x?1:0)"
     )
-    #taille = ( ('&(\+))`\O:('%(\C(1)))  )
+
+    # Exemple de code:
+    # taille    = ( ('&(\+))`\O:('%(\C(1))) )
     # lonngueur = ('~ (0 , 1|\+|\K))
-    # somme = ('&(\+))
-    # moyenne = (\Z. somme. \/ .taille  )
-    # moyenne = (\Z. ('&(\+)) .\/. ('~(0, 1|\+|\K)))
-    # moyenne = (\Z.'&(\+) .\/. '~(0, 1|\+|\K)) 
+    # somme     = ('&(\+))
+    # moyenne   = (\Z. somme. \/ .taille  )
+    # moyenne   = (\Z. ('&(\+)) .\/. ('~(0, 1|\+|\K)))
+    # moyenne   = (\Z. '&(\+) .\/. '~(0, 1|\+|\K)) 
+
     foreach($calcul in $Initialisation){
         $resultat = ($calcul | Convert-TextToParserInput | &(DoParseExecutable))
         $res = ComputeAST -AST $resultat.Value -Context $Context
@@ -975,15 +989,15 @@ function ComputeAST{
         $AST
     )
 
-    if( ($AST.Type -eq 'INTEGER') -or
-        ($AST.Type -eq 'STRING' ) -or
-        ($AST.Type -eq 'CLOSURE') -or
+    if( ($AST.Type -eq 'INTEGER'     ) -or
+        ($AST.Type -eq 'STRING'      ) -or
+        ($AST.Type -eq 'CLOSURE'     ) -or
         ($AST.Type -eq 'EXTERNALFUNC') -or
         ($AST.Type -eq 'ERROR')){
-        return [PSCustomObject]@{
-            Context = $Context
-            Computation = $AST
-        }
+          return [PSCustomObject]@{
+              Context = $Context
+              Computation = $AST
+          }
     }
 
     #ATTENTION:
@@ -1268,9 +1282,10 @@ function ComputeFUNCTIONEVAL{
     }
 
     if($func.Type -eq 'EXTERNALFUNC'){
+      $Computation = &($func.Func) $Right
       return [PSCustomObject]@{
         Context = $Context
-        Computation = &($func.Func) $Right.Value
+        Computation = $Computation
       }
     }
 
