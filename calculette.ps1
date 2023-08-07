@@ -670,6 +670,15 @@ function affichenl {
   return $value
 }
 
+function inspect {
+  param(
+    $value
+  )
+  Write-Host "INSPECTION DE $value"
+  DiveIntoObject -Object $value -depth 4
+  return $value
+}
+
 function Object2Text{
   param(
     $object
@@ -693,6 +702,22 @@ function Object2Text{
   return $txt
 }
 
+function Get-ContextValue {
+  param(
+    $Context,
+    $Identifiant
+  )
+
+  if($null -eq $Context){return $null}
+
+  $result = $Context.Values[$Identifiant]
+  if($null -eq $result){
+    return Get-ContextValue -Context $Context.Parent
+  }
+
+  return $result
+}
+
 function Calculette {
     param($Text = "(2+3)*4")
     
@@ -706,6 +731,7 @@ function Calculette {
             '{}'   = New-ASTEnsembleVide
             'affiche'   = New-ASTExternalfunc -Func $Function:affiche
             'affichenl' = New-ASTExternalfunc -Func $Function:affichenl
+            'inspect' = New-ASTExternalfunc -Func $Function:inspect
         }
     }
 
@@ -1174,7 +1200,8 @@ function ComputeIDENTIFIANT {
         }
         return [PSCustomObject]@{
             Context     = $Context
-            Computation = $Context.Values[$AST.Value]
+#            Computation = $Context.Values[$AST.Value]
+            Computation = Get-ContextValue -Context $Context -Identifiant $AST.Value
         }
     }
 }
@@ -1185,15 +1212,18 @@ function ComputeASSIGNATIONFUNCTION {
         $rhs,
         $Context
     )
+
     #HACK Temporaire, on copie le context parent plus tard faire
     #Une fonction Search-Variable -Context $context
     $NewValues = @{}
     $Context.Values.Keys |%{
         $NewValues[$_] = $Context.Values[$_]
     }
+    
     if(($rhs.Parameters.Type -eq 'INTEGER') -or ($rhs.Parameters.Type -eq 'STRING')){
         #On recherche la function
-        $fonction = $Context.Values[$lhs.Value]
+        #$fonction = $Context.Values[$lhs.Value]
+	$fonction = Get-ContextValue -Context $Context -Identifiant $lhs.Value
         if(!($fonction)){
             #ATTENTION: Copie de block tout pourri juste pour voir si ca marche!
             $closure = [PSCustomObject]@{
@@ -1219,6 +1249,7 @@ function ComputeASSIGNATIONFUNCTION {
         
         return $Computation
     }
+
     $closure = [PSCustomObject]@{
             Type  = 'CLOSURE'
             Context = [PSCustomObject]@{
@@ -1230,13 +1261,16 @@ function ComputeASSIGNATIONFUNCTION {
             Body       = $rhs.Body
             Value      = $closure #Le pire des megahack!
     }
+
     if($lhs.Value -ne '_'){ #Les fonctions anonymes sont anonymes!
         $Context.Values[$lhs.Value] = $closure
     }
+
     $closure.Context.Values[$lhs.Value] = $closure
     $closure.Context.Values['_'] = $closure
+
     return [PSCustomObject]@{
-        Context = $Context
+        Context     = $Context
         Computation = $closure
     }
 }
@@ -1290,42 +1324,40 @@ function ComputeFUNCTIONEVAL{
     }
 
     if($func.Type -ne 'CLOSURE'){
-DiveIntoObject -Object $func
+	DiveIntoObject -Object $func
         return [PSCustomObject]@{
             Context = $Context
             Computation = New-ASTError -Value "EVAL FUNCTION TYPE **$($func.Type)** not CLOSURE"
         }
     }
 
-        $param          = $func.Parameters
-        $EvalParam      = (ComputeAST -AST $rhs -Context $func.Context)
-        $func.Context.Values[$param.Value] = $EvalParam.Computation
-        #Recherche si la valeur n'est pas cachee en memoire:
-        $EvalParamValue = $EvalParam.Computation.Value
 
-        if($Null -ne $EvalParamValue){
-            $Memory = $func.Context.Memory[$EvalParamValue]
-            if($Memory.Type -eq 'CLOSURE'){
-#Write-Host "DiveIntoMemory"
-#DiveIntoObject -Object $Memory
-#Write-Host "DiveIntoParameter"
-#DiveIntoObject -Object $param
-                $Memory.Context.Values[$param.Value] = $EvalParam.Computation
-            }
-            if($Null -ne $Memory){
-                return [PSCustomObject]@{
-                    Context = $Context
-                    Computation = $Memory
-                }
-            }
+    $param          = $func.Parameters
+    $EvalParam      = (ComputeAST -AST $rhs -Context $func.Context)
+    $func.Context.Values[$param.Value] = $EvalParam.Computation
+
+    #Recherche si la valeur n'est pas cachee en memoire:
+    $EvalParamValue = $EvalParam.Computation.Value
+
+    if($Null -ne $EvalParamValue){
+        $Memory = $func.Context.Memory[$EvalParamValue]
+        if($Memory.Type -eq 'CLOSURE'){
+    	$Memory.Context.Values[$param.Value] = $EvalParam.Computation
         }
+        if($Null -ne $Memory){
+    	return [PSCustomObject]@{
+    	    Context = $Context
+    	    Computation = $Memory
+    	}
+        }
+    }
 
 #        $func.Context.Values[$param.Value] = $EvalParam.Computation
-        $EvalBody   = (ComputeAST -AST $func.Body -Context $func.Context)
-        return [PSCustomObject]@{
-            Context = $Context
-            Computation = $EvalBody.Computation
-        }
+    $EvalBody   = (ComputeAST -AST $func.Body -Context $func.Context)
+    return [PSCustomObject]@{
+        Context = $Context
+        Computation = $EvalBody.Computation
+    }
 }
 
 #ATTENTION: FOLD devra avoir le meme type que les condition
@@ -2392,16 +2424,35 @@ function DiveIntoObject{
     param(
         [Parameter(ValueFromPipeline=$true)]
         $Object,
-        $depth
+        $depth,
+	$Context
     )
+
     if($null -eq $Object){
         Write-Host "Dive Object NULL"
         return
     }
+
     $tab = ' ' * $depth
+
+    Write-Host "$($tab)INSPECT $Object"
+
     if($Object.GetType().Name -ne 'PSCustomObject'){
         Write-Host "$($tab)$Object -> Type: $($Object.GetType().Name)"
         return
+    }
+
+    if($Object.Type -eq 'CLOSURE'){
+	Write-Host "$($tab)CLOSURE Parameter: $($Object.Parameters.Value)"
+	Write-Host "$($tab)CLOSURE Param val: $($Object.Context.Values[$Object.Parameters.Value])"
+	$Context = $Object.Context
+    }
+
+    if($Object.Type -eq 'IDENTIFIANT'){
+        Write-Host "$($tab)ID Parameter: $($Object.Value)"
+	if($null -ne $Context){
+          Write-Host "$($tab)ID Param val: $($Context.Values[$Object.Value])"
+	}
     }
 
     $Names = $Object | Get-Member -MemberType NoteProperty | Select -ExpandProperty Name
@@ -2413,7 +2464,7 @@ function DiveIntoObject{
                 Write-Host "$($tab)$($_) : $($Object.$_) -> $($Object.$_.GetType().Name)"
             }else{
                 Write-Host "$($tab)$($_) : -> $($Object.$_.GetType().Name)"
-                $Object.$_ | DiveIntoObject -depth ($depth + 1)
+                $Object.$_ | DiveIntoObject -depth ($depth + 2) -Context $Context
             }
         }
     }
