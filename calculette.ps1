@@ -1333,22 +1333,19 @@ function ComputeFUNCTIONEVAL{
 
 
     $param          = $func.Parameters
-    $EvalParam      = (ComputeAST -AST $rhs -Context $func.Context)
+#    $EvalParam      = (ComputeAST -AST $rhs -Context $func.Context)
+    $EvalParam      = (ComputeAST -AST $rhs -Context $Context)
     $func.Context.Values[$param.Value] = $EvalParam.Computation
 
-    #Recherche si la valeur n'est pas cachee en memoire:
     $EvalParamValue = $EvalParam.Computation.Value
-
     if($Null -ne $EvalParamValue){
         $Memory = $func.Context.Memory[$EvalParamValue]
-        if($Memory.Type -eq 'CLOSURE'){
-    	$Memory.Context.Values[$param.Value] = $EvalParam.Computation
-        }
+
         if($Null -ne $Memory){
-    	return [PSCustomObject]@{
-    	    Context = $Context
-    	    Computation = $Memory
-    	}
+          return [PSCustomObject]@{
+          Context = $Context
+          Computation = $Memory
+          }
         }
     }
 
