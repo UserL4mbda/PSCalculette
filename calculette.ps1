@@ -708,6 +708,42 @@ function test_teamviewer_id {
   New-ASTInteger -value (($teamviewerResult.StartsWith("CRITICAL")? 0 : 1))
 }
 
+function read_file {
+  param(
+    $value
+  )
+
+  $content = Get-Content -Path $value.value
+
+  $NewMemory = [ordered]@{}
+  foreach($index in 0..($content.Count - 1)){
+      $NewMemory.Add($index, (New-ASTString -Value ($content[$index])))
+  }
+
+  return [PSCustomObject]@{
+      Type    = 'CLOSURE'
+      Context = [PSCustomObject]@{
+          Parent = $Context.Parent
+          Values = $Context.Values
+          Memory = $NewMemory
+      }
+      Parameters = [PSCustomObject]@{
+          Type  = 'IDENTIFIANT'
+          Value = 'x'
+      }
+      Body       = New-ASTError -Value 'VALEUR INDEFINIE'
+      Value      = $null
+  }
+}
+
+function trim {
+  param(
+    $value
+  )
+
+  New-ASTString -value ($value.Value.trim())
+}
+
 function Object2Text{
   param(
     $object
@@ -764,6 +800,8 @@ function Calculette {
             'test_ping'            = New-ASTExternalfunc -Func $Function:test_ping 
             'test_teamviewer_host' = New-ASTExternalfunc -Func $Function:test_teamviewer_host 
             'test_teamviewer_id'   = New-ASTExternalfunc -Func $Function:test_teamviewer_id 
+            'read_file'            = New-ASTExternalfunc -Func $Function:read_file
+            'trim'                 = New-ASTExternalfunc -Func $Function:trim
         }
     }
 
