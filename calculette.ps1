@@ -679,6 +679,13 @@ function inspect {
   return $value
 }
 
+function test_ping {
+  param(
+    $value
+  )
+  New-ASTInteger -value ((Test-NetConnection -ComputerName $value.value -InformationLevel Quiet) ? 1 : 0)
+}
+
 function Object2Text{
   param(
     $object
@@ -732,6 +739,7 @@ function Calculette {
             'affiche'   = New-ASTExternalfunc -Func $Function:affiche
             'affichenl' = New-ASTExternalfunc -Func $Function:affichenl
             'inspect' = New-ASTExternalfunc -Func $Function:inspect
+            'test_ping' = New-ASTExternalfunc -Func $Function:test_ping 
         }
     }
 
