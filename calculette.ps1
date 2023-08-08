@@ -674,6 +674,7 @@ function inspect {
   param(
     $value
   )
+
   Write-Host "INSPECTION DE $value"
   DiveIntoObject -Object $value -depth 4
   return $value
@@ -683,7 +684,28 @@ function test_ping {
   param(
     $value
   )
+
   New-ASTInteger -value ((Test-NetConnection -ComputerName $value.value -InformationLevel Quiet) ? 1 : 0)
+}
+
+function test_teamviewer_host {
+  param(
+    $value
+  )
+
+  $tvhost = $value.value
+  $teamviewerResult = bash -c "./check_teamviewer -apikey 19457875-LhbOo2QLrMieBlCrojhp -host $tvhost"
+  New-ASTInteger -value (($teamviewerResult.StartsWith("CRITICAL")? 0 : 1))
+}
+
+function test_teamviewer_id {
+  param(
+    $value
+  )
+
+  $id = $value.value
+  $teamviewerResult = bash -c "/mnt/c/Users/Admin/code/PSCalculette/check_teamviewer -apikey 19457875-LhbOo2QLrMieBlCrojhp -teamviewerid $id"
+  New-ASTInteger -value (($teamviewerResult.StartsWith("CRITICAL")? 0 : 1))
 }
 
 function Object2Text{
@@ -731,15 +753,17 @@ function Calculette {
     $Context = [PSCustomObject]@{
         Parent = $null
         Values = @{
-            'toto' = New-ASTInteger -Value 13
-            'tron' = New-ASTInteger -Value 0
-            '_AUTOINIVARIABLE' = New-ASTInteger -Value 0
-            'Vide' = New-ASTEnsembleVide
-            '{}'   = New-ASTEnsembleVide
-            'affiche'   = New-ASTExternalfunc -Func $Function:affiche
-            'affichenl' = New-ASTExternalfunc -Func $Function:affichenl
-            'inspect' = New-ASTExternalfunc -Func $Function:inspect
-            'test_ping' = New-ASTExternalfunc -Func $Function:test_ping 
+            'toto'                 = New-ASTInteger -Value 13
+            'tron'                 = New-ASTInteger -Value 0
+            '_AUTOINITVARIABLE'    = New-ASTInteger -Value 0
+            'Vide'                 = New-ASTEnsembleVide
+            '{}'                   = New-ASTEnsembleVide
+            'affiche'              = New-ASTExternalfunc -Func $Function:affiche
+            'affichenl'            = New-ASTExternalfunc -Func $Function:affichenl
+            'inspect'              = New-ASTExternalfunc -Func $Function:inspect
+            'test_ping'            = New-ASTExternalfunc -Func $Function:test_ping 
+            'test_teamviewer_host' = New-ASTExternalfunc -Func $Function:test_teamviewer_host 
+            'test_teamviewer_id'   = New-ASTExternalfunc -Func $Function:test_teamviewer_id 
         }
     }
 
