@@ -1230,6 +1230,10 @@ function ComputeAST{
         return ComputeROND -lhs $Left -rhs $Right -Context $NewContext
     }
 
+    if($AST.Type -eq 'FILTER') {
+        return ComputeFILTER -lhs $Left -rhs $Right -Context $NewContext
+    }
+
     DiveIntoObject -Object $AST -depth 4
     [PSCustomObject]@{
         Context = $Context
@@ -1707,6 +1711,75 @@ function Convert-STRINGtoCLOSURE {
     }
 
     return $closure
+}
+
+function ComputeFILTER {
+    param(
+        $lhs,
+        $rhs,
+        $Context
+    )
+
+    $LeftComputation  = $lhs
+    $RightComputation = $rhs
+
+    if($LeftComputation.Type -eq 'INTEGER' -or $RightComputation.Type -eq 'INTEGER'){
+        DiveIntoObject -Object $AST -depth 4
+        return [PSCustomObject]@{
+            Context = $Context
+            Computation = New-ASTError -Value "UNABLE TO FILTER ON **$($AST.Type)**"
+        }
+    }
+
+    if($LeftComputation.Type -eq 'STRING'){
+        $LeftComputation = Convert-STRINGtoCLOSURE -ASTString $LeftComputation
+    }
+
+    if($LeftComputation.Type -ne 'CLOSURE'){
+      Write-Host "DIVE LEFT:" -ForegroundColor Red
+      DiveIntoObject -Object $LeftComputation
+      return [PSCustomObject]@{
+          Context = $Context
+          Computation = New-ASTError -Value "FILTER FUNCTION TYPE **$($LeftComputation.Type)** not CLOSURE"
+      }
+    }
+
+    if(!((ASTTypeIs -AST $RightComputation -Type 'FUNCTION') -or $RightComputation.Type -eq 'STRING')){
+    Write-Host "DIVE RIGHT:" -ForegroundColor Red
+    DiveIntoObject -Object $RightComputation
+        return [PSCustomObject]@{
+            Context = $Context
+            Computation = New-ASTError -Value "FILTER FUNCTION TYPE **$($RightComputation.Type)** not CLOSURE"
+        }
+    }
+
+    $NewMemory = @{}
+    $LeftComputation.Context.Memory.Keys | Sort-Object |%{
+        $EvaluationAST = [PSCustomObject]@{
+            Type  = 'FUNCTIONEVAL'
+            Left  = $RightComputation
+            Right = $LeftComputation.Context.Memory[$_]
+        }
+        $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
+        if($Evaluation.Computation.Value -ne 0) {
+          $NewMemory.Add($_, $LeftComputation.Context.Memory[$_])
+        }
+    }
+
+    return [PSCustomObject]@{
+        Context     = $Context
+        Computation = [PSCustomObject]@{
+            Type    = 'CLOSURE'
+            Context = [PSCustomObject]@{
+                Parent = $LeftComputation.Context.Parent
+                Values = $LeftComputation.Context.Values
+                Memory = $NewMemory
+            }
+            Parameters = $LeftComputation.Parameters
+            Body       = $LeftComputation.Body
+            Value      = $LeftComputation.Value
+        }
+    }
 }
 
 function ComputeMAP{
