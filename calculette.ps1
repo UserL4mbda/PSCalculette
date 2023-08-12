@@ -120,6 +120,18 @@ function New-LexerID{
 }
 
 function DoParseExecutable{
+
+# Point d'entree du parser: Voici l'ordre
+# - DoParserSemicolon
+# - DoParseComma
+# - DoParseMapReduce
+# - DoParseQuestionMark
+# - DoParseColon
+# - DoParseIntList
+# - DoParseSum
+# - DoParseProduct
+# - DoParseFunctionEval
+
     {
         param(
             [Parameter(ValueFromPipeline)]
@@ -136,6 +148,136 @@ function DoParseExecutable{
         })
     }.GetNewClosure()
 }
+
+##########################################################
+# TESTS POUR APPLICATION FUNCTION AVEC UN ESPACE
+##########################################################
+function New-ParserCharWithSpace{
+    param(
+        [Parameter(ValueFromPipeline)]
+        $Char
+    )
+    {
+        param(
+            [Parameter(ValueFromPipeline)]
+            $In
+        )
+        if($null -eq $In){ return }
+
+        $LexerChar = New-LexerChar -Char $Char
+        #$c = $In | &(New-SpaceRemoval -Lexer $LexerChar)
+        $c = $In | &($LexerChar)
+
+        if($null -eq $c){ return }
+        [PSCustomObject]@{
+            Text  = $c.Text
+            Index = $c.Index
+            Value = [PSCustomObject]@{
+                Type  = 'CHAR'
+                Value = $c.Value
+            }
+        }
+    }.GetNewClosure()
+}
+
+function DoParseSpaceFunctionApplication {
+    {
+        param(
+            [Parameter(ValueFromPipeline)]
+            $In
+        )
+        if($null -eq $In){ return }
+
+        $operationTransformer = {
+            param($I, $left, $right)
+            [PSCustomObject]@{
+                Text  = $right.Text
+                Index = $right.Index
+                Value = [PSCustomObject]@{
+                    #Type  = 'SEMICOLON'
+                    Type  = 'FUNCTIONEVAL'
+                    Left  = $left.Value
+                    Right = $right.Value
+                }
+            }
+        }
+        $ET        = (Get-Item 'function:New-ParserAnd').ScriptBlock
+        $Semicolon = New-ParserChar -Char ';'
+        $Suite     = (DoParseComma)
+
+        $ZeroOrMoreSums =
+            New-ParserStar ($Semicolon |&$ET $Suite -Transformer $operationTransformer)
+
+        $SemicolonParser = $Suite |&$ET $ZeroOrMoreSums
+
+        $In | &$SemicolonParser
+    }.GetNewClosure()
+}
+
+function DoParseFunctionEvalSpace{
+    {
+        param(
+            [Parameter(ValueFromPipeline)]
+            $In
+        )
+        if($null -eq $In){ return }
+
+        $operationTransformer = {
+            param($In, $left, $right)
+            [PSCustomObject]@{
+                Text  = $right.Text
+                Index = $right.Index
+                Value = [PSCustomObject]@{
+                    Type  = 'FUNCTIONEVAL'
+                    Left  = $left.Value
+#                    Right = $right.Value  #Je ne sais pas pourquoi cela ne fonctionne pas
+                    Right = $In.Value      #Je ne sais pas pourquoi cela fonctionne !
+                }
+            }
+        }
+
+        $OU          = (Get-Item 'function:New-ParserOr' ).ScriptBlock
+        $ET          = (Get-Item 'function:New-ParserAnd').ScriptBlock
+        $ENTIER      = (New-ParserInteger)
+        $VARIABLE    = (New-ParserID)
+        $STRING      = (New-ParserString)
+        $OPENPAREN   = New-ParserChar -Char '('
+        $CLOSEPAREN  = New-ParserChar -Char ')'
+
+        $ASSIGNATION = (DoParseAssignation) |&$OU (DoParseAssigationFunction)
+
+        $parenthese  = (Skip-Parser (New-ParserChar '(') |&$ET (DoParseSemicolon)) |New-ParserAnd (Skip-Parser (New-ParserChar ')')) -Transformer {
+            #param Operator Before After
+            param($left, $In, $right)
+            [PSCustomObject]@{
+                Text  = $left.Text
+                Index = $right.Index
+                Value = $left.Value
+            }
+        }
+
+        $Valeur   = $ASSIGNATION |&$OU $ENTIER |&$OU $VARIABLE |&$OU $STRING |&$OU $parenthese
+        #$Operator = New-ParserChar -Char '^'
+        $Operator = Skip-Parser(New-ParserWord -Word 'toto')
+        $Suite = (DoParseComma)
+
+#        $ZeroOrMoreValeur =
+#            New-ParserStar ($OPENPAREN |&$ET (DoParseSemicolon) |&$ET (Skip-Parser $CLOSEPAREN) -Transformer $operationTransformer)
+        
+        $ZeroOrMoreSuite =
+            New-ParserStar ($Operator |&$ET $Suite -Transformer $operationTransformer)
+
+#        $ZeroOrMoreSuite =
+#            New-ParserStar ( $Suite )
+            
+        $functionEvaluation = $Suite |&$ET $ZeroOrMoreSuite -Transformer $operationTransformer
+
+        $In | &$functionEvaluation
+    }.GetNewClosure()
+}
+##########################################################
+# FIN TESTS POUR APPLICATION FUNCTION AVEC UN ESPACE
+##########################################################
 
 function DoParseAssignation{
     {
@@ -262,7 +404,8 @@ function DoParseSemicolon {
         $ET        = (Get-Item 'function:New-ParserAnd').ScriptBlock
         $Semicolon = New-ParserChar -Char ';'
         $Suite     = (DoParseComma)
-
+# Test de Evaluation avec espace
+#        $Suite     = (DoParseFunctionEvalSpace)
         $ZeroOrMoreSums =
             New-ParserStar ($Semicolon |&$ET $Suite -Transformer $operationTransformer)
 
