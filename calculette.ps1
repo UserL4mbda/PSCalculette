@@ -2552,8 +2552,20 @@ function ComputeMULTIPLICATION {
     }
 
     if(($lhs.Type -eq 'INTEGER' -or $lhs.Type -eq 'STRING') -and (ASTTypeIS -AST $rhs -Type 'FUNCTION')) {
+
+      #On remplace la memory de la fonction constante qui est vide par une liste
+      #de constante (liste de meme longueur que celle de la fonction a multiplier)
+      $NewMemory = @{}
+      $funcMem = $rhs.Context.Memory
+      $taille = $funcMem.Count
+      if($taille -gt 0){
+        foreach ($index in (0..($taille - 1))) {
+          $NewMemory.Add($index, $lhs)
+        }
+      }
       #On transforme $lhs en fonction constante
       $lhs = (New-ASTFunctionConstant $lhs)
+      $lhs.Context.Memory = $NewMemory
     }
 
     if(($rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING') -and (ASTTypeIS -AST $lhs -Type 'FUNCTION')) {
