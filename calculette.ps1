@@ -1201,6 +1201,21 @@ function New-ASTIdentifiant{
     New-ASTGENERIC -Type 'IDENTIFIANT' -Value $Identifiant
 }
 
+function New-ASTFunctionConstant{
+  param($ASTValue)
+  [PSCustomObject]@{
+    Type    = 'CLOSURE'
+    Context = [PSCustomObject]@{
+      Parent = @{}
+      Values = @{'x' = $ASTValue}
+      Memory = @{}
+    }
+    Parameters = (New-ASTIdentifiant -Identifiant 'x')
+    Body       = $ASTValue
+    Value      = "_(x) = $($ASTValue.Value)"
+  }
+}
+
 # EXTERNALFUNC
 function New-ASTExternalfunc {
   param($Func)
@@ -1254,6 +1269,7 @@ function ComputeAST{
     if($AST.Type -eq 'CONDITION'){
         return ComputeCONDITION -AST $AST -Context $Context
     }
+
     #Ceci n'est pas un operateur!
     if($AST.Type -eq 'QUESTIONMARK'){
         return ComputeQUESTIONMARK -lhs $AST.Left -rhs $AST.Right -Context $Context
@@ -1493,85 +1509,89 @@ function ComputeASSIGNATIONFUNCTION {
 }
 
 function ComputeFUNCTIONEVAL{
-    param(
-        $lhs,
-        $rhs,
-        $Context
-    )
+  param(
+      $lhs,
+      $rhs,
+      $Context
+  )
 
-    $func  = $lhs
-    $Right = $rhs
+  $func  = $lhs
+  $Right = $rhs
 
-    if($func.Type -eq 'INTEGER'){
-        $AST = [PSCustomObject]@{
-            Type  = 'MULTIPLICATION'
-            Left  = $func
-            Right = $Right
-        }
-        return (ComputeAST -Context $Context -AST $AST)
+  if($func.Type -eq 'INTEGER'){
+    $AST = [PSCustomObject]@{
+        Type  = 'MULTIPLICATION'
+        Left  = $func
+        Right = $Right
     }
+      return (ComputeAST -Context $Context -AST $AST)
+  }
 
-    if($func.Type -eq 'STRING'){
-        if($Right.Type -ne 'INTEGER'){
-            return [PSCustomObject]@{
-                Context     = $Context
-                Computation = New-ASTError -Value "INDEX DE TEXTE NON ENTIER"
-            }
-        }
+  if($func.Type -eq 'STRING'){
 
-        if(($Right.Value -ge $func.Value.Length) -or ($Right.Value -lt 0)){
-            return [PSCustomObject]@{
-                Context     = $Context
-                Computation = New-ASTError -Value "INDEX POUR TEXT HORS DES LIMITES"
-            }
-        }
-
+    if($Right.Type -ne 'INTEGER'){
         return [PSCustomObject]@{
             Context     = $Context
-            Computation = New-ASTString -Value ($func.Value[$Right.Value])
+            Computation = New-ASTError -Value "INDEX DE TEXTE NON ENTIER"
         }
     }
 
-    if($func.Type -eq 'EXTERNALFUNC'){
-      $Computation = &($func.Func) $Right
-      return [PSCustomObject]@{
-        Context = $Context
-        Computation = $Computation
-      }
-    }
-
-    if($func.Type -ne 'CLOSURE'){
-	DiveIntoObject -Object $func
+    if(($Right.Value -ge $func.Value.Length) -or ($Right.Value -lt 0)){
         return [PSCustomObject]@{
-            Context = $Context
-            Computation = New-ASTError -Value "EVAL FUNCTION TYPE **$($func.Type)** not CLOSURE"
+            Context     = $Context
+            Computation = New-ASTError -Value "INDEX POUR TEXT HORS DES LIMITES"
         }
     }
 
-
-    $param          = $func.Parameters
-#    $EvalParam      = (ComputeAST -AST $rhs -Context $func.Context)
-    $EvalParam      = (ComputeAST -AST $rhs -Context $Context)
-    $func.Context.Values[$param.Value] = $EvalParam.Computation
-
-    $EvalParamValue = $EvalParam.Computation.Value
-    if($Null -ne $EvalParamValue){
-        $Memory = $func.Context.Memory[$EvalParamValue]
-
-        if($Null -ne $Memory){
-          return [PSCustomObject]@{
-          Context = $Context
-          Computation = $Memory
-          }
-        }
+    return [PSCustomObject]@{
+        Context     = $Context
+        Computation = New-ASTString -Value ($func.Value[$Right.Value])
     }
 
-#        $func.Context.Values[$param.Value] = $EvalParam.Computation
-    $EvalBody   = (ComputeAST -AST $func.Body -Context $func.Context)
+  }
+
+  if($func.Type -eq 'EXTERNALFUNC'){
+    $Computation = &($func.Func) $Right
+    return [PSCustomObject]@{
+      Context = $Context
+      Computation = $Computation
+    }
+  }
+
+  if($func.Type -ne 'CLOSURE'){
+    DiveIntoObject -Object $func
+
     return [PSCustomObject]@{
         Context = $Context
-        Computation = $EvalBody.Computation
+        Computation = New-ASTError -Value "EVAL FUNCTION TYPE **$($func.Type)** not CLOSURE"
     }
+  }
+
+
+  $param          = $func.Parameters
+  $EvalParam      = (ComputeAST -AST $rhs -Context $Context)
+  $func.Context.Values[$param.Value] = $EvalParam.Computation
+
+  $EvalParamValue = $EvalParam.Computation.Value
+
+  if($Null -ne $EvalParamValue){
+    $Memory = $func.Context.Memory[$EvalParamValue]
+
+    if($Null -ne $Memory){
+      return [PSCustomObject]@{
+      Context = $Context
+      Computation = $Memory
+      }
+    }
+  }
+
+#        $func.Context.Values[$param.Value] = $EvalParam.Computation
+  $EvalBody   = (ComputeAST -AST $func.Body -Context $func.Context)
+
+  return [PSCustomObject]@{
+      Context = $Context
+      Computation = $EvalBody.Computation
+  }
 }
 
 #ATTENTION: FOLD devra avoir le meme type que les condition
@@ -1751,6 +1771,7 @@ function ComputeREDUCE {
         $rhs,
         $Context
     )
+
     if($lhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING'){
         DiveIntoObject -Object $AST -depth 4
         return [PSCustomObject]@{
@@ -2054,7 +2075,7 @@ function ComputeZIP {
             Type    = 'CLOSURE'
             Context = [PSCustomObject]@{
                 Parent = $Context.Parent
-                Values = $Context.Values
+                Values = @{x = (New-ASTIntegr 0)}
                 Memory = $NewMemory
             }
             Parameters = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
@@ -2064,6 +2085,7 @@ function ComputeZIP {
     }
     
 }
+
 function ComputeBOUCLE {
     param(
         $lhs,
@@ -2447,6 +2469,57 @@ function ComputeROND{
 
 }
 
+function MultiplieFonction {
+  param(
+    $fonction1,
+    $fonction2,
+    $Context
+  )
+
+  #Attention pour l'instant on considere que le 1er tableau est la reference
+  $MemoryReference = $fonction1.Context.Memory
+  $MemSize         = $MemoryReference.Count - 1
+  $NewMemory       = @{}
+
+  if($MemoryReference.Count -gt 0){
+    foreach ($index in (0..$MemSize)){
+      $left  = $MemoryReference[$index]
+      $right = (ComputeFUNCTIONEVAL -lhs $fonction2 -rhs (New-ASTInteger $index)).Computation
+
+#      $NewMemory.Add($index, (New-ASTInteger ($left.Value * $right.Value)))
+      $NewMemory.Add($index, (ComputeMULTIPLICATION -lhs $left -rhs $right -Context $Context).Computation)
+    }
+  }
+
+  return [PSCustomObject]@{
+      Context     = $Context
+      Computation = [PSCustomObject]@{
+        Type      = 'CLOSURE'
+        Context   = [PSCustomObject]@{
+          Parent = $null
+#          Values = $Context.Values
+          Values = @{}
+          Memory = $NewMemory
+        }
+        Parameters = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+        Body       = [PSCustomObject]@{
+          Type  = 'MULTIPLICATION'
+          Left  = [PSCustomObject]@{
+                    Type  = 'FUNCTIONEVAL'
+                    Left  = $fonction1
+                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+                  }
+          Right = [PSCustomObject]@{
+                    Type  = 'FUNCTIONEVAL'
+                    Left  = $fonction2
+                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+                  }
+        }
+        Value      = "($($fonction1.Value)) * ($($fonction2.Value))"
+      }
+  }
+}
+
 function ComputeMULTIPLICATION {
     param(
         $lhs,
@@ -2476,6 +2549,20 @@ function ComputeMULTIPLICATION {
             Context     = $Context
             Computation = New-ASTInteger -Value ($lhs.Value * $rhs.Value)
         }
+    }
+
+    if(($lhs.Type -eq 'INTEGER' -or $lhs.Type -eq 'STRING') -and (ASTTypeIS -AST $rhs -Type 'FUNCTION')) {
+      #On transforme $lhs en fonction constante
+      $lhs = (New-ASTFunctionConstant $lhs)
+    }
+
+    if(($rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING') -and (ASTTypeIS -AST $lhs -Type 'FUNCTION')) {
+      #On transforme $rhs en fonction constante
+      $rhs = (New-ASTFunctionConstant $rhs)
+    }
+
+    if((ASTTypeIs -AST $lhs -Type 'FUNCTION') -and (ASTTypeIs -AST $rhs -Type 'FUNCTION')){
+        return (MultiplieFonction -fonction1 $lhs -fonction2 $rhs -Context $Context)
     }
 
     return [PSCustomObject]@{
