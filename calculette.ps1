@@ -473,6 +473,7 @@ function DoParseMapReduce {
                 '!!' { $type = 'BOUCLE'          }
                 '!'  { $type = 'ZIP'             }
                 '??' { $type = 'FILTER'          }
+                ' '  { $type = 'APPLIQUE'        }
             }
             [PSCustomObject]@{
                 Text  = $right.Text
@@ -485,7 +486,6 @@ function DoParseMapReduce {
             }
         }
         $ET        = (Get-Item 'function:New-ParserAnd').ScriptBlock
-#        $Operator = New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))
         $Operator = New-ParserOr -LeftParser (New-ParserWord '??') -RightParser( New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))))))
         $Suite     = (DoParseQuestionMark)
 
@@ -1918,15 +1918,24 @@ function ComputeFILTER {
     }
 
     $NewMemory = @{}
-    $LeftComputation.Context.Memory.Keys | Sort-Object |%{
+    $Memory = $LeftComputation.Context.Memory
+    $Keys   = $LeftComputation.Context.Memory.Keys
+    #$LeftComputation.Context.Memory.Keys | Sort-Object |%{
+    $currentIndex = 0
+    foreach($index in (0..($Memory.Keys.Count - 1))){
+    #While($index -lt $Keys.Count){
+      $clef = $Memory.Keys[$index]
         $EvaluationAST = [PSCustomObject]@{
             Type  = 'FUNCTIONEVAL'
             Left  = $RightComputation
-            Right = $LeftComputation.Context.Memory[$_]
+#            Right = $LeftComputation.Context.Memory[$_]
+            Right = $Memory[$clef]
         }
         $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
         if($Evaluation.Computation.Value -ne 0) {
-          $NewMemory.Add($_, $LeftComputation.Context.Memory[$_])
+#          $NewMemory.Add($_, $LeftComputation.Context.Memory[$_])
+          $NewMemory.Add($currentIndex, $Memory[$clef])
+          $currentIndex++
         }
     }
 
@@ -2469,6 +2478,57 @@ function ComputeROND{
 
 }
 
+function OperationSurFonction {
+  param(
+    $OperationType,
+    $fonction1,
+    $fonction2,
+    $Context
+  )
+
+  #Attention pour l'instant on considere que le 1er tableau est la reference
+  $MemoryReference = $fonction1.Context.Memory
+  $MemSize         = $MemoryReference.Count - 1
+  $NewMemory       = @{}
+
+  if($MemoryReference.Count -gt 0){
+    foreach ($index in (0..$MemSize)){
+      $left  = $MemoryReference[$index]
+      $right = (ComputeFUNCTIONEVAL -lhs $fonction2 -rhs (New-ASTInteger $index)).Computation
+
+#      $NewMemory.Add($index, (New-ASTInteger ($left.Value * $right.Value)))
+      $NewMemory.Add($index, (ComputeMULTIPLICATION -lhs $left -rhs $right -Context $Context).Computation)
+    }
+  }
+
+  return [PSCustomObject]@{
+      Context     = $Context
+      Computation = [PSCustomObject]@{
+        Type      = 'CLOSURE'
+        Context   = [PSCustomObject]@{
+          Parent = $null
+          Values = @{}
+          Memory = $NewMemory
+        }
+        Parameters = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+        Body       = [PSCustomObject]@{
+          Type  = $OperationType
+          Left  = [PSCustomObject]@{
+                    Type  = 'FUNCTIONEVAL'
+                    Left  = $fonction1
+                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+                  }
+          Right = [PSCustomObject]@{
+                    Type  = 'FUNCTIONEVAL'
+                    Left  = $fonction2
+                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+                  }
+        }
+        Value      = "($($fonction1.Value)) $OperationType ($($fonction2.Value))"
+      }
+  }
+}
+
 function MultiplieFonction {
   param(
     $fonction1,
@@ -2520,6 +2580,24 @@ function MultiplieFonction {
   }
 }
 
+function New-ArrayOfElement {
+  param(
+    $Size,
+    $Element
+  )
+
+  $NewMemory = @{}
+  #$funcMem = $rhs.Context.Memory
+  #$taille = $funcMem.Count
+  if($Size -gt 0){
+    foreach ($index in (0..($Size - 1))) {
+      $NewMemory.Add($index, $Element)
+    }
+  }
+
+  return $NewMemory
+}
+
 function ComputeMULTIPLICATION {
     param(
         $lhs,
@@ -2555,26 +2633,32 @@ function ComputeMULTIPLICATION {
 
       #On remplace la memory de la fonction constante qui est vide par une liste
       #de constante (liste de meme longueur que celle de la fonction a multiplier)
-      $NewMemory = @{}
-      $funcMem = $rhs.Context.Memory
-      $taille = $funcMem.Count
-      if($taille -gt 0){
-        foreach ($index in (0..($taille - 1))) {
-          $NewMemory.Add($index, $lhs)
-        }
-      }
+
+#      $NewMemory = @{}
+#      $funcMem = $rhs.Context.Memory
+#      $taille = $funcMem.Count
+#      if($taille -gt 0){
+#        foreach ($index in (0..($taille - 1))) {
+#          $NewMemory.Add($index, $lhs)
+#        }
+#      }
+
+      $NewMemory = (New-ArrayOfElement -Size ($rhs.Context.Memory.Count) -Element $lhs)
+
       #On transforme $lhs en fonction constante
       $lhs = (New-ASTFunctionConstant $lhs)
       $lhs.Context.Memory = $NewMemory
     }
 
     if(($rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING') -and (ASTTypeIS -AST $lhs -Type 'FUNCTION')) {
+      #On ne fait pas la meme transformation que precedemment car l'algo de OperationSurFonction prend comme Memory de reference celle de fonction1
       #On transforme $rhs en fonction constante
       $rhs = (New-ASTFunctionConstant $rhs)
     }
 
     if((ASTTypeIs -AST $lhs -Type 'FUNCTION') -and (ASTTypeIs -AST $rhs -Type 'FUNCTION')){
-        return (MultiplieFonction -fonction1 $lhs -fonction2 $rhs -Context $Context)
+        return (OperationSurFonction -OperationType 'MULTIPLICATION' -fonction1 $lhs -fonction2 $rhs -Context $Context)
+        #return (MultiplieFonction -fonction1 $lhs -fonction2 $rhs -Context $Context)
     }
 
     return [PSCustomObject]@{
@@ -2645,6 +2729,29 @@ function ComputeDIVISION {
         }
     }
 
+    if(($lhs.Type -eq 'INTEGER' -or $lhs.Type -eq 'STRING') -and (ASTTypeIS -AST $rhs -Type 'FUNCTION')) {
+
+      #On remplace la memory de la fonction constante qui est vide par une liste
+      #de constante (liste de meme longueur que celle de la fonction a multiplier)
+
+      $NewMemory = (New-ArrayOfElement -Size ($rhs.Context.Memory.Count) -Element $lhs)
+
+      #On transforme $lhs en fonction constante
+      $lhs = (New-ASTFunctionConstant $lhs)
+      $lhs.Context.Memory = $NewMemory
+    }
+
+    if(($rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING') -and (ASTTypeIS -AST $lhs -Type 'FUNCTION')) {
+      #On ne fait pas la meme transformation que precedemment car l'algo de OperationSurFonction prend comme Memory de reference celle de fonction1
+      #On transforme $rhs en fonction constante
+      $rhs = (New-ASTFunctionConstant $rhs)
+    }
+
+    if((ASTTypeIs -AST $lhs -Type 'FUNCTION') -and (ASTTypeIs -AST $rhs -Type 'FUNCTION')){
+        return (OperationSurFonction -OperationType 'DIVISION' -fonction1 $lhs -fonction2 $rhs -Context $Context)
+        #return (MultiplieFonction -fonction1 $lhs -fonction2 $rhs -Context $Context)
+    }
+
     [PSCustomObject]@{
         Context = $Context
         Computation = New-ASTError -Value "UNABLE TO DIVIDE $($left.Type) WITH $($right.Type)"
@@ -2675,19 +2782,44 @@ function ComputeSOUSTRACTION {
         }
     }
 
-    if($left.Type -eq 'CLOSURE' -and $right.Type -eq 'CLOSURE'){
-        #Pour l'instant on ne teste que l'ensemble vide
-        if(($left.Context.Memory.Count -eq 0) -and ($right.Context.Memory.Count -eq 0)){
-            return [PSCustomObject]@{
-                Context     = $Context
-                Computation = New-ASTInteger -Value 0
-            }
-        }
-        return [PSCustomObject]@{
-            Context     = $Context
-            Computation = New-ASTInteger -Value 1
-        }
+#    if($left.Type -eq 'CLOSURE' -and $right.Type -eq 'CLOSURE'){
+#        #Pour l'instant on ne teste que l'ensemble vide
+#        if(($left.Context.Memory.Count -eq 0) -and ($right.Context.Memory.Count -eq 0)){
+#            return [PSCustomObject]@{
+#                Context     = $Context
+#                Computation = New-ASTInteger -Value 0
+#            }
+#        }
+#        return [PSCustomObject]@{
+#            Context     = $Context
+#            Computation = New-ASTInteger -Value 1
+#        }
+#    }
+
+
+    if(($lhs.Type -eq 'INTEGER' -or $lhs.Type -eq 'STRING') -and (ASTTypeIS -AST $rhs -Type 'FUNCTION')) {
+
+      #On remplace la memory de la fonction constante qui est vide par une liste
+      #de constante (liste de meme longueur que celle de la fonction a multiplier)
+
+      $NewMemory = (New-ArrayOfElement -Size ($rhs.Context.Memory.Count) -Element $lhs)
+
+      #On transforme $lhs en fonction constante
+      $lhs = (New-ASTFunctionConstant $lhs)
+      $lhs.Context.Memory = $NewMemory
     }
+
+    if(($rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING') -and (ASTTypeIS -AST $lhs -Type 'FUNCTION')) {
+      #On ne fait pas la meme transformation que precedemment car l'algo de OperationSurFonction prend comme Memory de reference celle de fonction1
+      #On transforme $rhs en fonction constante
+      $rhs = (New-ASTFunctionConstant $rhs)
+    }
+
+    if((ASTTypeIs -AST $lhs -Type 'FUNCTION') -and (ASTTypeIs -AST $rhs -Type 'FUNCTION')){
+        return (OperationSurFonction -OperationType 'SOUSTRACTION' -fonction1 $lhs -fonction2 $rhs -Context $Context)
+        #return (MultiplieFonction -fonction1 $lhs -fonction2 $rhs -Context $Context)
+    }
+
 
     Write-Host -ForegroundColor DarkRed "Error de soustraction:"
     Write-Host -ForegroundColor DarkRed "Dive Left"
@@ -2712,6 +2844,7 @@ function ComputeModulo {
         Computation = New-ASTInteger -Value ($lhs.Value % $rhs.Value)
     }
 }
+
 function ComputeADDITION {
     param(
         $lhs,
@@ -2756,8 +2889,33 @@ function ComputeADDITION {
         }
     }
 
+
+    if(($lhs.Type -eq 'INTEGER' -or $lhs.Type -eq 'STRING') -and (ASTTypeIS -AST $rhs -Type 'FUNCTION')) {
+
+      #On remplace la memory de la fonction constante qui est vide par une liste
+      #de constante (liste de meme longueur que celle de la fonction a multiplier)
+
+      $NewMemory = (New-ArrayOfElement -Size ($rhs.Context.Memory.Count) -Element $lhs)
+
+      #On transforme $lhs en fonction constante
+      $lhs = (New-ASTFunctionConstant $lhs)
+      $lhs.Context.Memory = $NewMemory
+    }
+
+    if(($rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING') -and (ASTTypeIS -AST $lhs -Type 'FUNCTION')) {
+      #On ne fait pas la meme transformation que precedemment car l'algo de OperationSurFonction prend comme Memory de reference celle de fonction1
+      #On transforme $rhs en fonction constante
+      $rhs = (New-ASTFunctionConstant $rhs)
+    }
+
+    if((ASTTypeIs -AST $lhs -Type 'FUNCTION') -and (ASTTypeIs -AST $rhs -Type 'FUNCTION')){
+        return (OperationSurFonction -OperationType 'ADDITION' -fonction1 $lhs -fonction2 $rhs -Context $Context)
+        #return (MultiplieFonction -fonction1 $lhs -fonction2 $rhs -Context $Context)
+    }
+
     if($Left.Type -eq 'STRING') { $Type = 'STRING' } else { $Type = 'INTEGER' }
     $Type = $(if($Left.Type -eq 'STRING') {'STRING'} else {'INTEGER'})
+
     return [PSCustomObject]@{
         Context = $Context
         Computation = New-ASTGENERIC -Type $Type -Value ($Left.Value + $Right.Value)
