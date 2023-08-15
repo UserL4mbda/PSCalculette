@@ -82,7 +82,7 @@ Instead of the operators one can use functions to write a point free definition 
 - ```\R``` the function for the range operator
 - ```\*``` the function for the ```*``` operator
 - ```\&``` the function for the ```&``` operator but instead of ```\&``` we use ```'&``` defined as ```'&(x)=_(y)=(y&x)```
-- ```\O``` the function defined as ```\O(f)=_(g)=_(x)=(f(g(x)))```
+- ```@``` the operator defined as ```(f @ g)(x) = (f(g(x)))```
 ```
-fact = (('&.\*)`\O:(\R.1))
+fact = (('&.\*) @ (\R.1))
 ```
