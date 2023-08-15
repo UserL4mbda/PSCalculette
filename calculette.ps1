@@ -79,7 +79,7 @@ function New-LexerID{
         #if($txt[$index] -eq '\'){
         if($txt[$index] -eq '\' -or $txt[$index] -eq "'"){
             $n = $txt[$index + 1]
-            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P' -or $n -eq 'R' -or $n -eq 'B'){
+            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P' -or $n -eq 'R' -or $n -eq 'B' -or $n -eq '>' -or $n -eq '<'){
                 $Value = $txt[$index] + $txt[$index + 1]
             }
             return [PSCustomObject]@{
@@ -901,9 +901,13 @@ function Object2Text{
     return ""
   }
 
+  $indexes = ($memory.Keys | Sort-Object)
+
   $txt = "("
-  $memory.values | %{
-    $txt += "$(Object2Text $_), "
+  #$memory.values | %{
+  $indexes | %{
+#    $txt += "$(Object2Text $_), "
+    $txt += "$(Object2Text $memory[$_]), "
   }
   $txt = $txt.substring(0, $txt.Length - 2)
   $txt += ")"
@@ -961,6 +965,10 @@ function Calculette {
         "'@(x)=_(y)=(y@x)"
         "\|(x)=_(y)=(x|y)"
         "'|(x)=_(y)=(y|x)"
+        "\>(x)=_(y)=(x>y)"
+        "'>(x)=_(y)=(y>x)"
+        "\<(x)=_(y)=(x<y)"
+        "'<(x)=_(y)=(y<x)"
         "\=(x)=_(y)=(x-y?0:1)"
         "\S(f)=_(x)=_(y)=(f(y)(x))"
         "\Z(f)=_(g)=_(h)=_(x)=(g(f de x)(h de x))"
@@ -1920,28 +1928,27 @@ function ComputeFILTER {
     $NewMemory = @{}
     $Memory = $LeftComputation.Context.Memory
     $Keys   = $LeftComputation.Context.Memory.Keys
-    #$LeftComputation.Context.Memory.Keys | Sort-Object |%{
     $currentIndex = 0
-    foreach($index in (0..($Memory.Keys.Count - 1))){
-    #While($index -lt $Keys.Count){
-      $clef = $Memory.Keys[$index]
+    #Attention au probleme de key et keyCollection de Powershell
+    #Voici une reponse possible:
+    #https://stackoverflow.com/questions/26552453/powershell-hashtable-keys-property-doesnt-return-the-keys-it-returns-a-keycol
+    $Memory.GetEnumerator() | ForEach-Object {
+    $clef = $_.Key
         $EvaluationAST = [PSCustomObject]@{
             Type  = 'FUNCTIONEVAL'
             Left  = $RightComputation
-#            Right = $LeftComputation.Context.Memory[$_]
             Right = $Memory[$clef]
         }
         $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
         if($Evaluation.Computation.Value -ne 0) {
-#          $NewMemory.Add($_, $LeftComputation.Context.Memory[$_])
           $NewMemory.Add($currentIndex, $Memory[$clef])
           $currentIndex++
         }
     }
 
     return [PSCustomObject]@{
-        Context     = $Context
-        Computation = [PSCustomObject]@{
+      Context     = $Context
+      Computation = [PSCustomObject]@{
             Type    = 'CLOSURE'
             Context = [PSCustomObject]@{
                 Parent = $LeftComputation.Context.Parent
