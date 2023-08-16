@@ -986,8 +986,8 @@ function Calculette {
         "'&(fn)=_(liste)= (liste & fn)"
         "\%(liste)=_(fn)= (liste % fn)"
         "'%(fn)=_(liste)= (liste % fn)"
-        "\O(f)=_(g)=_(x)=(f(g(x)))"
-        "'O(g)=_(f)=_(x)=(f(g(x)))"
+        #"\O(f)=_(g)=_(x)=(f(g(x)))"
+        #"'O(g)=_(f)=_(x)=(f(g(x)))"
         #\W est le rond pour 2 variables
         "\W(f)=_(g)=_(x)=_(y)=_(z)=(f(g(x)(y))(z))"
         #Modulo
