@@ -1,0 +1,7 @@
+sont_equaux_a = \=
+
+garde_les_elements_qui = \?
+
+appartiennent_a(ensemble_dont_on)=_(element) = (\B(longueur de (ensemble_dont_on `garde_les_elements_qui: (sont_equaux_a . element))))
+
+intersection(ensemble1)=_(ensemble2) = (ensemble1 `garde_les_elements_qui: (appartiennent_a .ensemble2))
