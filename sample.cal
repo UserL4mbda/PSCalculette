@@ -1,25 +1,48 @@
-#Calcul de la taille d'une liste
+# Definitions globales
+et <- '@; par <- '|; a <- '|
 
-remplace_chaque_element_par = ('% @ \C)
 
-et = '@
+# Calcul de la taille d'une liste
+
+remplace_chaque_element = ('% @ \C)
 
 fait_la_somme = ('&.\+)
 
-taille = ((remplace_chaque_element_par. 1) `et: fait_la_somme )
+
+la_taille = ((remplace_chaque_element par 1) et fait_la_somme )
 
 
+# Calcul de la moyenne
+C'est = \Z
+
+la_somme = fait_la_somme
+
+divisee = \/
+
+la_moyenne = (C'est. la_somme. divisee par la_taille)
 
 
-#Calcul de l'intersection de 2 ensembles
+# Definition de palindrome
+lorsque = \Z
 
-sont_equaux_a = \=
+un_texte = \I
 
-garde_les_elements_qui = \?
+est_equal = \=
 
-appartiennent_a(ensemble_dont_on)=_(element) = (\B(longueur de (ensemble_dont_on `garde_les_elements_qui: (sont_equaux_a . element))))
+son_inverse = ('&.'+)
 
-intersection(ensemble1)=_(ensemble2) = (ensemble1 `garde_les_elements_qui: (appartiennent_a .ensemble2))
+un_palindrome = (lorsque. un_texte. est_equal a son_inverse)
+
+
+# Calcul de l'intersection de 2 ensembles
+
+sont_equaux = \=
+
+garde_les_elements_qui <- \?
+
+appartiennent(ensemble_dont_on)=_(element) = (\B(longueur de (ensemble_dont_on garde_les_elements_qui (sont_equaux a element))))
+
+intersection(ensemble1)=_(ensemble2) = (ensemble1 garde_les_elements_qui (appartiennent a ensemble2))
 
 
 
