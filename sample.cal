@@ -4,12 +4,12 @@ et <- '@; par <- '|; a <- '|
 
 # Calcul de la taille d'une liste
 
-remplace_chaque_element = ('% @ \C)
+remplace_chaque_element = '% @ \C
 
-fait_la_somme = ('&.\+)
+fait_la_somme = '&.\+
 
 
-la_taille = ((remplace_chaque_element par 1) et fait_la_somme )
+la_taille = (remplace_chaque_element par 1) et fait_la_somme
 
 
 # Calcul de la moyenne
@@ -19,7 +19,7 @@ la_somme = fait_la_somme
 
 divisee = \/
 
-la_moyenne = (C'est. la_somme. divisee par la_taille)
+la_moyenne = C'est. la_somme. divisee par la_taille
 
 
 # Definition de palindrome
@@ -29,9 +29,9 @@ un_texte = \I
 
 est_equal = \=
 
-son_inverse = ('&.'+)
+son_inverse = '&.'+
 
-un_palindrome = (lorsque. un_texte. est_equal a son_inverse)
+un_palindrome = lorsque. un_texte. est_equal a son_inverse
 
 
 # Calcul de l'intersection de 2 ensembles
@@ -40,9 +40,9 @@ sont_equaux = \=
 
 garde_les_elements_qui <- \?
 
-appartiennent(ensemble_dont_on)=_(element) = (\B(longueur de (ensemble_dont_on garde_les_elements_qui (sont_equaux a element))))
+appartiennent(ensemble_dont_on)=_(element) = \B(longueur de (ensemble_dont_on garde_les_elements_qui (sont_equaux a element)))
 
-intersection(ensemble1)=_(ensemble2) = (ensemble1 garde_les_elements_qui (appartiennent a ensemble2))
+intersection(ensemble1)=_(ensemble2) = ensemble1 garde_les_elements_qui (appartiennent a ensemble2)
 
 
 
