@@ -63,6 +63,30 @@ Import-Module ./MicroParser.psm1
 # Context.Element.Value
 # Context.Parent
 
+function Fold{
+    param(
+        $Accu,
+        $ScriptBlock,
+        [Parameter(ValueFromPipeline=$True)]
+        $List
+    )
+    foreach($element in $Input){
+        $Accu = &$ScriptBlock $Accu $element
+    }
+    return $Accu
+}
+
+function Reduce{
+    param(
+        $ScriptBlock,
+        [Parameter(ValueFromPipeline=$true)]
+        $List
+    )
+    $First, $Rest = $input
+    if($null -eq $Rest){ return $First }
+    $Rest | Fold $First $ScriptBlock
+}
+
 function New-LexerID{
     {
         param(
@@ -380,6 +404,40 @@ function DoParseAssigationFunction {
     }.GetNewClosure()
 }
 
+function DoParseAssignationOperator{
+    {
+        param(
+            [Parameter(ValueFromPipeline)]
+            $In
+        )
+        if($null -eq $In){ return }
+        #Une assignation est de la forme ID = calcul
+        #$EQUAL  = New-ParserChar -Char '='
+        $EQUAL  = New-ParserWord -Word '<-'
+        $ASSIGN = (New-ParserID) | New-ParserAnd $EQUAL -Transformer {
+            param($left, $In, $right)
+            [PSCustomObject]@{
+                Text  = $left.Text
+                Index = $right.Index
+                Value = $left.Value
+            }
+        }
+        $Assignation = $ASSIGN | New-ParserAnd (DoParseSum) -Transformer {
+            param($left, $In, $right)
+            [PSCustomObject]@{
+                Text  = $left.Text
+                Index = $right.Index
+                Value = [PSCustomObject]@{
+                    Type  = 'ASSIGNATIONOPERATOR'
+                    Left  = $left.Value
+                    Right = $right.Value
+                }
+            }
+        }
+        $In |&$Assignation
+    }.GetNewClosure()
+}
+
 
 function DoParseSemicolon {
     {
@@ -448,6 +506,7 @@ function DoParseComma {
     }.GetNewClosure()
 }
 
+$Script:CustomOperators = @()
 function DoParseMapReduce {
     {
         param(
@@ -458,38 +517,50 @@ function DoParseMapReduce {
 
         $operationTransformer = {
             param($I, $left, $right)
-            switch ( $I.Value.Value ) {
-                '%%' { $type = 'MODULO'          }
-                '%'  { $type = 'MAP'             }
-                '&'  { $type = 'REDUCE'          }
-                '|'  { $type = 'PIPE'            }
-                '#'  { $type = 'FIRSTELEMENTS'   }
-                '@'  { $type = 'ROND'            }
-                '.'  { $type = 'APPLIQUE'        }
-                'de' { $type = 'APPLIQUE'        }
-                '~'  { $type = 'FOLD'            }
-                '++' { $type = 'ADDARRAY'        }
-                '`'  { $type = 'OPERATORFUNCTION'}
-                '!!' { $type = 'BOUCLE'          }
-                '!'  { $type = 'ZIP'             }
-                '??' { $type = 'FILTER'          }
-                ' '  { $type = 'APPLIQUE'        }
+            
+            $typeBasic = switch ( $I.Value.Value ) {
+                '%%' { 'MODULO'           }
+                '%'  { 'MAP'              }
+                '&'  { 'REDUCE'           }
+                '|'  { 'PIPE'             }
+                '#'  { 'FIRSTELEMENTS'    }
+                '@'  { 'ROND'             }
+                '.'  { 'APPLIQUE'         }
+                'de' { 'APPLIQUE'         }
+                '~'  { 'FOLD'             }
+                '++' { 'ADDARRAY'         }
+                '`'  { 'OPERATORFUNCTION' }
+                '!!' { 'BOUCLE'           }
+                '!'  { 'ZIP'              }
+                '??' { 'FILTER'           }
             }
+            
+            $typeCustom = $CustomOperators.Contains( $I.Value.Value ) ? 'OPERATORCUSTOM' : $false
+            $type = $typeBasic ?? $typeCustom
+
             [PSCustomObject]@{
                 Text  = $right.Text
                 Index = $right.Index
                 Value = [PSCustomObject]@{
-                    Type = $type
+                    Type  = $type
                     Left  = $left.Value
                     Right = $right.Value
+                    Value = $I.Value.Value
                 }
             }
         }
-        $ET        = (Get-Item 'function:New-ParserAnd').ScriptBlock
-        $Operator = New-ParserOr -LeftParser (New-ParserWord '??') -RightParser( New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))))))
+
+        $ET       = (Get-Item 'function:New-ParserAnd').ScriptBlock
+
+        $OperatorBasic = New-ParserOr -LeftParser (New-ParserWord '??') -RightParser( New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))))))
+
+        $OperatorCustom = $CustomOperators | % { New-ParserWord $_ } | Reduce {New-ParserOr -LeftParser $args[0] -RightParser $args[1]}
+
+        $Operator = $OperatorCustom ? (New-ParserOr -LeftParser $OperatorBasic -RightParser $OperatorCustom) : $OperatorBasic
+
         $Suite     = (DoParseQuestionMark)
 
-        $ZeroOrMoreSums =
+        $ZeroOrMoreSums  =
             New-ParserStar ($Operator |&$ET $Suite -Transformer $operationTransformer)
 
         $SemicolonParser = $Suite |&$ET $ZeroOrMoreSums
@@ -729,7 +800,7 @@ function DoParseFunctionEval{
         $OPENPAREN   = New-ParserChar -Char '('
         $CLOSEPAREN  = New-ParserChar -Char ')'
 
-        $ASSIGNATION = (DoParseAssignation) |&$OU (DoParseAssigationFunction)
+        $ASSIGNATION = (DoParseAssignation) |&$OU (DoParseAssigationFunction) |&$OU (DoParseAssignationOperator)
 
         $parenthese  = (Skip-Parser (New-ParserChar '(') |&$ET (DoParseSemicolon)) |New-ParserAnd (Skip-Parser (New-ParserChar ')')) -Transformer {
             #param Operator Before After
@@ -924,7 +995,7 @@ function Get-ContextValue {
 
   $result = $Context.Values[$Identifiant]
   if($null -eq $result){
-    return Get-ContextValue -Context $Context.Parent
+    return Get-ContextValue -Context $Context.Parent -Identifiant $Identifiant
   }
 
   return $result
@@ -1275,6 +1346,11 @@ function ComputeAST{
         return ComputeASSIGNATION -lhs $AST.Left -rhs $AST.Right -Context $Context
     }
 
+    #ASSIGNATIONOPERATOR
+    if($AST.Type -eq 'ASSIGNATIONOPERATOR'){
+        return ComputeASSIGNATIONOPERATOR -lhs $AST.Left -rhs $AST.Right -Context $Context
+    }
+
     #Ceci n'est pas un operateur!
     if($AST.Type -eq 'CONDITION'){
         return ComputeCONDITION -AST $AST -Context $Context
@@ -1403,6 +1479,10 @@ function ComputeAST{
         return ComputeFILTER -lhs $Left -rhs $Right -Context $NewContext
     }
 
+    if($AST.Type -eq 'OPERATORCUSTOM') {
+        return ComputeOPERATORCUSTOM -lhs $Left -rhs $Right -Context $NewContext -Value $AST.Value
+    }
+
     DiveIntoObject -Object $AST -depth 4
     [PSCustomObject]@{
         Context = $Context
@@ -1516,6 +1596,31 @@ function ComputeASSIGNATIONFUNCTION {
         Context     = $Context
         Computation = $closure
     }
+}
+
+function ComputeOPERATORCUSTOM {
+  param(
+      $lhs,
+      $rhs,
+      $Context,
+      $Value
+  )
+
+  $funcName        = $Value
+  $firstParameter  = $lhs
+  $secondParameter = $rhs
+
+  $func = Get-ContextValue -Context $Context -Identifiant $funcName
+  $Right = $rhs
+
+  $tmpFunc = ComputeFUNCTIONEVAL -lhs $func -rhs $firstParameter -Context $Context
+
+  $resultat = ComputeFUNCTIONEVAL -lhs $tmpFunc.Computation -rhs $secondParameter -Context $tmpFunc.Context
+
+  return [PSCustomObject]@{
+      Context = $resultat.Context
+      Computation = $resultat.Computation
+  }
 }
 
 function ComputeFUNCTIONEVAL{
@@ -2355,6 +2460,37 @@ function ComputeCOMMA {
     }
 }
 
+function ComputeASSIGNATION {
+    param(
+        $lhs,
+        $rhs,
+        $Context
+    )
+    if($lhs.Type -eq 'IDENTIFIANT'){
+        $computation = (ComputeAST -AST $rhs -Context $Context)
+        $NeoContext  = $computation.Context
+        $NeoContext.Values[$lhs.Value] = $computation.Computation
+        return $computation
+    }
+    return New-ASTError -Value "Le LHS d'une ASSIGNATION doit etre un IDENTIFIANT"
+}
+
+#COMPUTEASSIGNATIONOPERATOR 
+function ComputeASSIGNATIONOPERATOR {
+    param(
+        $lhs,
+        $rhs,
+        $Context
+    )
+    if($lhs.Type -eq 'IDENTIFIANT'){
+        $computation = (ComputeAST -AST $rhs -Context $Context)
+        $NeoContext  = $computation.Context
+        $NeoContext.Values[$lhs.Value] = $computation.Computation
+        if(!($Script:CustomOperators.Contains($lhs.Value))){ $Script:CustomOperators += $lhs.Value }
+        return $computation
+    }
+    return New-ASTError -Value "Le LHS d'une ASSIGNATION doit etre un IDENTIFIANT"
+}
 function ComputeASSIGNATION {
     param(
         $lhs,
