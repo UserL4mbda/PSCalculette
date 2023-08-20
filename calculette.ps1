@@ -320,7 +320,8 @@ function DoParseAssignation{
                 Value = $left.Value
             }
         }
-        $Assignation = $ASSIGN | New-ParserAnd (DoParseSum) -Transformer {
+#        $Assignation = $ASSIGN | New-ParserAnd (DoParseSum) -Transformer {
+        $Assignation = $ASSIGN | New-ParserAnd (DoParseComma) -Transformer {
             param($left, $In, $right)
             [PSCustomObject]@{
                 Text  = $left.Text
@@ -383,7 +384,8 @@ function DoParseAssigationFunction {
                         }
                     } |
                     New-ParserAnd ($CLOSEPAREN) -Transformer $SKIPRIGHT |
-                    New-ParserAnd $EQUAL -Transformer $SKIPRIGHT | New-ParserAnd (DoParseSum) -Transformer {
+#                    New-ParserAnd $EQUAL -Transformer $SKIPRIGHT | New-ParserAnd (DoParseSum) -Transformer {
+                    New-ParserAnd $EQUAL -Transformer $SKIPRIGHT | New-ParserAnd (DoParseComma) -Transformer {
                         param($left, $In, $right)
                         [PSCustomObject]@{
                             Text  = $right.Text
@@ -422,7 +424,8 @@ function DoParseAssignationOperator{
                 Value = $left.Value
             }
         }
-        $Assignation = $ASSIGN | New-ParserAnd (DoParseSum) -Transformer {
+#        $Assignation = $ASSIGN | New-ParserAnd (DoParseSum) -Transformer {
+        $Assignation = $ASSIGN | New-ParserAnd (DoParseComma) -Transformer {
             param($left, $In, $right)
             [PSCustomObject]@{
                 Text  = $left.Text
