@@ -17,11 +17,13 @@ And to apply the funciton f to the value 4
 f(4)
 > 7
 ```
-Or you can use the dot or the pipe operator:
+Or you can use the dot or the pipe or even the `de`  operator:
 ```
 f.4
 > 7
 4 | f
+> 7
+f de 4
 > 7
 ```
 You can simulate multiple arguments with lambdas:
@@ -60,7 +62,10 @@ Boolean:
 Conditional:
 ```
 1 ? "true" : "false"
+> true
+
 0 ? "true" : "false"
+> false
 ```
 
 Conditional exemple with factorial (warning calculette does not implement tail recursion)
@@ -109,4 +114,39 @@ comma is now a new operator
 > 3, 4
 "a" comma 3 comma "b"
 > a, 3, b
+```
+
+Operators:\
+
+#Basic operators\
+## +
+```
++
+3 + 2
+> 5
+
+"a" + "b"
+> ab3 + 2
+> 5
+
+"a" + "b"
+> ab3 + 2
+> 5
+
+"a" + "b"
+> ab
+```
+-
+/
+*
+%%
+.
+|
+..
+,
+%
+&
+!
+!!
+@
 ```
