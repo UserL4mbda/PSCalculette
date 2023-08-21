@@ -91,4 +91,22 @@ Instead of these operators one can use functions to write a point free definitio
 - ```@``` the operator defined as ```(f @ g)(x) = (f(g(x)))```
 ```
 fact = '&.\* @ \R(1)
+fact(5)
+> 120
+```
+
+Calculette implements custom operators
+```
+insert(what)=_(prefix)=_(suffix)= "" + prefix + what + suffix
+
+comma <- insert.", "
+```
+comma is now a new operator
+```
+"a" comma "b"
+> a, b
+3 comma 4
+> 3, 4
+"a" comma 3 comma "b"
+> a, 3, b
 ```
