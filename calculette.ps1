@@ -2644,8 +2644,15 @@ function OperationSurFonction {
       $left  = $MemoryReference[$index]
       $right = (ComputeFUNCTIONEVAL -lhs $fonction2 -rhs (New-ASTInteger $index)).Computation
 
-#      $NewMemory.Add($index, (New-ASTInteger ($left.Value * $right.Value)))
-      $NewMemory.Add($index, (ComputeMULTIPLICATION -lhs $left -rhs $right -Context $Context).Computation)
+#      $NewMemory.Add($index, (ComputeMULTIPLICATION -lhs $left -rhs $right -Context $Context).Computation)
+      $operation = [PSCustomObject]@{
+        Type  = $OperationType
+        Left  = $left
+        Right = $right
+      }
+
+      $calcul = (ComputeAST -AST $operation -Context $Context).Computation
+      $NewMemory.Add($index, $calcul)
     }
   }
 
