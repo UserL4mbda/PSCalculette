@@ -116,21 +116,11 @@ comma is now a new operator
 > a, 3, b
 ```
 
-Operators:\
+#Operators:
 
-#Basic operators\
 ## +
 ```
-+
 3 + 2
-> 5
-
-"a" + "b"
-> ab3 + 2
-> 5
-
-"a" + "b"
-> ab3 + 2
 > 5
 
 "a" + "b"
