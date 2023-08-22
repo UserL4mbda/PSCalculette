@@ -1049,6 +1049,8 @@ function Calculette {
         "\S(f)=_(x)=_(y)=(f(y)(x))"
         "\Z(f)=_(g)=_(h)=_(x)=(g(f de x)(h de x))"
         #"\z(l)=_(x)= ( l(1)( l(0)(x) ) ( l(2)(x) ) ) "
+        #\W est le pendant du \Z pour 2 variables
+        "\W(f)=_(g)=_(h)=_(x)=_(y)=( g (f(x)(y)) (h(x)(y)) )"
         "\I(x)=x"
         "\K(f)=_(x)=_(y)=f(x)"
         "\C(x)=_(y)=x"
@@ -1062,8 +1064,8 @@ function Calculette {
         "'%(fn)=_(liste)= (liste % fn)"
         #"\O(f)=_(g)=_(x)=(f(g(x)))"
         #"'O(g)=_(f)=_(x)=(f(g(x)))"
-        #\W est le rond pour 2 variables
-        "\W(f)=_(g)=_(x)=_(y)=_(z)=(f(g(x)(y))(z))"
+        #\O est le rond pour 2 variables
+        "\O(f)=_(g)=_(x)=_(y)=_(z)=(f(g(x)(y))(z))"
         #Modulo
         "MOD(x)=_(y)=( x %% y )"
         #Range
