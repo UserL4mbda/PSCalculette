@@ -1062,8 +1062,6 @@ function Calculette {
         "'&(fn)=_(liste)= (liste & fn)"
         "\%(liste)=_(fn)= (liste % fn)"
         "'%(fn)=_(liste)= (liste % fn)"
-        #"\O(f)=_(g)=_(x)=(f(g(x)))"
-        #"'O(g)=_(f)=_(x)=(f(g(x)))"
         #\O est le rond pour 2 variables
         "\O(f)=_(g)=_(x)=_(y)=_(z)=(f(g(x)(y))(z))"
         #Modulo
@@ -2203,7 +2201,7 @@ function ComputeZIP {
             Type    = 'CLOSURE'
             Context = [PSCustomObject]@{
                 Parent = $Context.Parent
-                Values = @{x = (New-ASTIntegr 0)}
+                Values = @{x = (New-ASTInteger 0)}
                 Memory = $NewMemory
             }
             Parameters = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
