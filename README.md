@@ -12,7 +12,7 @@ Function definition:
 ```
 f(x) = 3*x-5
 ```
-And to apply the funciton f to the value 4
+And to apply the function f to the value 4
 ```
 f(4)
 > 7
@@ -116,27 +116,223 @@ comma is now a new operator
 > a, 3, b
 ```
 
-# Operators:
+## Operators:
 
-## +
+### Operator `+`
 ```
 3 + 2
 > 5
 
 "a" + "b"
 > ab
+
+f(x) = x + 2
+g(x) = 2 * x
+
+h = f + g
+
+h(1)
+> 5
+
+h(2)
+> 8
+
+m = 2 + g
+
+m(1)
+> 4
+
+k = 1..5
+> (1, 2, 3, 4, 5)
+
+l = 6..10
+> (6, 7, 8, 9, 10)
+
+k + l
+> (7, 9, 11, 13, 15)
 ```
--
-/
-*
-%%
-.
-|
-..
-,
-%
-&
-!
+
+### Operator `/`
+The same as `+` except for strings
+```
+"abc:efg" / ":"
+> (abc, efg)
+```
+`/` is a kind of split
+
+### Operator `*`
+The same as `+` except you can't multiply 2 strings
+
+### Operator `-`
+The same as `*`
+
+### Operator `%%`
+The modulo operator
+```
+11 %% 7
+> 4
+```
+
+### Operator `..`
+The range operator\
+It creates a list
+```
+4..8
+> (4, 5, 6, 7, 8)
+```
+
+### Operator `,`
+It creates a list
+```
+2,8,7,"Hello","world!",5
+> (2, 8, 7, Hello, world!, 5)
+```
+
+### Operator `.`, `|`, `()`
+These operators apply an argument to a function, or at least something that looks like a function.\
+Be careful of operator precedence. `.`,`|` have the same precedence and `()` has the highest precedence
+```
+f(x) = 3 * x + 2
+
+f(3)
+> 11
+
+f.3
+> 11
+
+3 | f
+> 11
+
+(1..5)(3)
+> 4
+
+(1..5).3
+> 4
+
+3|(1..5)
+> 4
+
+(2,8,7,"Hello","world!",5)(3)
+> Hello
+
+(2,8,7,"Hello","world!",5).3
+> Hello
+
+3 | (2,8,7,"Hello","world!",5)
+> Hello
+
+3 (2+1)
+> 9
+
+3 (3)
+> 9
+
+3(3)
+> 9
+
+3.3
+> 9
+
+3|3
+> 9
+
+"Hello World!"(6)
+> W
+
+"Hello World!".6
+> W
+
+6 |"Hello World!"
+W
+```
+
+### Operator `%`
+The map operator.\
+It takes a list and a function and applies the function to each element of the list
+
+```
+f(x) = 3 * x + 2
+
+1..5 % f
+> (5, 8, 11, 14, 17)
+
+(2,8,7,"Hello","world!",5) % f
+> (8, 26, 23, HelloHelloHello2, world!world!world!2, 17)
+
+1..5 % _(x)= x*3
+> (3, 6, 9, 12, 15)
+
+1..5 % \*(3)
+> (3, 6, 9, 12, 15)
+
+star(x)= "*" + x + "*"
+
+"Hello world!" % star
+> (*H*, *e*, *l*, *l*, *o*, * *, *w*, *o*, *r*, *l*, *d*, *!*)
+```
+
+### Operator `&`
+The reduce operator.
+
+```
+1..5 & _(a)=_(b)= a + b
+> 15
+
+1..5 & \+
+> 15
+
+max(a)=_(b)= a > b ? a : b
+
+(5, 8, 11, 14, 17) & max
+> 17
+
+f(x) = 3 * x + 2
+
+1..5 % f & max
+> 17
+
+"Hello world!" & '+
+> !dlrow olleH
+
+```
+
+### Operator `!`
+The zip operator
+
+```
+list1 = (1..6)
+> (1, 2, 3, 4, 5, 6)
+list2 = (3..8)
+> (3, 4, 5, 6, 7, 8)
+> what_to_do(e1)=_(e2)=(e1, e2)
+
+list1 : list2 ! what_to_do
+> ((1, 3), (2, 4), (3, 5), (4, 6), (5, 7), (6, 8))
+
+(1,2,3) : (4,5,6) ! \P
+> ((1, 4), (2, 5), (3, 6))
+
+list1 : list2 ! \+
+> (4, 6, 8, 10, 12, 14)
+
+```
+
+### Operator `??`
+The filter operator
+
+```
+```
+
+### Operator `@`
+The composition operator
+
+```
+```
+
+### Operator `~`
+The fold operator
+
+```
+```
+
 !!
-@
-```
