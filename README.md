@@ -322,8 +322,29 @@ list1 : list2 ! \+
 ### Operator `??`
 The filter operator
 
+In the "calculette" programming language, the `??` operator is the filter operator. It allows you to filter elements from a list based on a specified condition. The operator works as follows:
+
+```calculette
+new_list = original_list ?? _(element) = condition
 ```
+
+- `new_list` is the resulting list containing elements that satisfy the condition.
+- `original_list` is the list you want to filter.
+- `_(element)` defines a lambda with the element parameter.
+- `condition` is the filtering condition that determines whether an element should be included in the new list.
+
+For example, suppose you have a list of numbers `(1, 2, 3, 4, 5)` and you want to filter out the even numbers. You can use the `??` operator like this:
+
+```calculette
+filtered_list = (1, 2, 3, 4, 5) ?? _(element) = element %% 2
 ```
+
+In this example, `(element) = element %% 2` is the condition that checks if an element is even (returns 0, which is considered false in "calculette") or odd (returns non-zero, which is considered true in "calculette"). The resulting `filtered_list` will be `(1, 3, 5)`.
+
+Similarly, you can use the `??` operator to filter elements based on various conditions, making it easy to extract subsets of data from a list.
+
+The `??` filter operator is a powerful tool in the "calculette" language for selectively extracting elements that meet specific criteria from a list.
+
 
 ### Operator `@`
 The composition operator
