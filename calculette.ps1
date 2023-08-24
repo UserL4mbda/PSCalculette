@@ -1809,7 +1809,9 @@ function ComputeFOLD {
             Left  = $lambda.Computation
             Right = $ValeurClef
         }
-        $resultat = ComputeAST -Context $lambda.Context -AST $EvaluationLambda
+#        $resultat = ComputeAST -Context $lambda.Context -AST $EvaluationLambda
+#        $Evaluation = ComputeFUNCTIONEVAL -Context $Context -lhs $RightComputation -rhs $LeftComputation.Context.Memory[$_]
+        $resultat = ComputeFUNCTIONEVAL -Context $Context -lhs $lambda.Computation -rhs $ValeurClef
         if($resultat.Computation.Type -eq 'ERROR'){ return $resultat }
 
         $accu = $resultat.Computation
@@ -2121,7 +2123,8 @@ function ComputeMAP{
             Left  = $RightComputation
             Right = $LeftComputation.Context.Memory[$_]
         }
-        $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
+#        $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
+        $Evaluation = ComputeFUNCTIONEVAL -Context $Context -lhs $RightComputation -rhs $LeftComputation.Context.Memory[$_]
         $NewMemory.Add($_, $Evaluation.Computation)
     }
 
@@ -2526,7 +2529,9 @@ function ComputeCONDITION {
         $AST,
         $Context
     )
+#Write-Host "Dans ComputeCONDITION" -ForegroundColor Magenta
     $condComputation = (ComputeAST -AST $AST.Condition -Context $Context)
+#DiveIntoObject $condComputation.Computation
     $NeoContext = $condComputation.Context
     $cond = $condComputation.Computation.Value
     if($cond){
