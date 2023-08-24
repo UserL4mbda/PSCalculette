@@ -302,9 +302,11 @@ The zip operator
 ```
 list1 = (1..6)
 > (1, 2, 3, 4, 5, 6)
+
 list2 = (3..8)
 > (3, 4, 5, 6, 7, 8)
-> what_to_do(e1)=_(e2)=(e1, e2)
+
+what_to_do(element1)=_(element2)=(element1, element2)
 
 list1 : list2 ! what_to_do
 > ((1, 3), (2, 4), (3, 5), (4, 6), (5, 7), (6, 8))
@@ -326,13 +328,111 @@ The filter operator
 ### Operator `@`
 The composition operator
 
+The `@` operator enables you to seamlessly combine two functions, let's call them `f` and `g`, to create a new function that applies `f` to the result of applying `g` to its input.
+
+Here's how you would use the "@" operator:
+
 ```
+new_function = f @ g
+result = new_function(x)
 ```
+In the above code:
+
+- `f` is a function that you want to apply after `g`.
+- `g` is a function that takes an input and produces an intermediate result.
+- `f @ g` creates a new function that represents the composition of `f` after `g`.
+- When you call `new_function(x)`, it's equivalent to first applying `g` to `x`, then applying `f` to the result of `g(x)`.
+
+`@` lets you compose functions together to create a data processing pipeline
+```
+pipeline = analyze_data @ clean_data @ load_data
+result = pipeline(data)
+```
+
+### Operator `++`
+The append operator
+
+
+In the calculette programming language, you can use the "append" operator denoted as `++` to add an element to the end of a list. This operator is useful for extending lists dynamically.
+
+To use the "append" operator:
+
+```
+newlist = list ++ element
+```
+
+- `list` is the existing list to which you want to add an element.
+- `element` is the value you want to append to the end of the list.
+- `newlist` is the resulting list after the `element` has been added.
+
+For example, if you have a list of numbers `(1, 2, 3)` and you want to append the value `4`, you would use the `++` operator like this:
+
+```
+newlist = (1, 2, 3) ++ 4
+```
+
+After this operation, `newlist` would become `(1, 2, 3, 4)`.
+
+The "append" operator simplifies the process of adding elements to lists in the calculette language, making list manipulation more intuitive and straightforward.
 
 ### Operator `~`
 The fold operator
 
+The fold operator, denoted as `~`, is a powerful tool for aggregating values in a list. The fold operation has the form: `list ~ accu : _([element]) = [action]`.
+
+- `list` is the list you want to perform the fold operation on.
+- `accu` is an accumulator that holds the result of the fold operation.
+- `[element]` is the current element being processed from the list.
+- `[action]` is the action you want to perform on the element and the accumulator.
+
+For example:
 ```
+list ~ initial_accumulator : _(accumulator)=_(element) = updated_accumulator(accumulator)(element)
 ```
+In this fold operation, `element` is iterated through the list, and for each element, `updated_accumulator(accumulator)(element)` is performed while updating the `initial_accumulator` based on the action.
+
+Here is a more concrete example:
+
+Suppose you have a list of numbers, and you want to calculate the sum of all the numbers using the fold operator.
+
+Let's say your list is `(1, 2, 3, 4, 5)`, and you want to use the fold operator to calculate the sum. The fold operation will look like this:
+
+```
+sum = (1, 2, 3, 4, 5) ~ 0 : _(acc) = _(element) = acc + element
+```
+
+In this fold operation:
+- `sum` is the resulting sum of all the numbers.
+- `(1, 2, 3, 4, 5)` is the list you're working with.
+- `0` is the initial accumulator, starting from zero.
+- `_(acc)` defines a lambda with the accumulator parameter.
+- `_(element)` defines a lambda with the element parameter.
+- `acc + element` is the action to update the accumulator by adding the current element to it.
+
+As the fold operation proceeds, the accumulator starts from `0`, and for each element in the list, it adds the element to the accumulator. After processing all the elements, the final `sum` will hold the value `15`, which is the sum of all the numbers in the list.
+
+Another example:\
+Suppose you have a list of numbers `(1, 2, 3, 4, 5)` and you want to filter out the even numbers and then append each even number with an exclamation mark.
+
+Here's how you can achieve this using the fold operator `~`, the append operator `++`, and the ternary conditional:
+
+```
+filtered_and_appended = (1, 2, 3, 4, 5) ~ {} : _(acc) = _(element) = (element %% 2 ? acc : acc ++ ("" + element + "!") )
+```
+
+In this operation:
+- `filtered_and_appended` will hold the final result.
+- `(1, 2, 3, 4, 5)` is the original list.
+- `{}` is the initial accumulator, representing an empty list.
+- `_(acc)` defines a lambda with the accumulator parameter.
+- `_(element)` defines a lambda with the current element being processed.
+- `element %% 2 ? acc : acc ++ ( "" + element + "!")` uses the ternary conditional to concatenate even elements with an exclamation mark (the `"" + element` is used to cast the number into a string) and drop odd elements.
+
+In the "calculette" language, you use `{}` to represent an empty list.
+
+After the fold operation, `filtered_and_appended` will hold the value `(2!, 4!)`, which are the even numbers from the list, concatenated with exclamation marks.
+
+This example showcases how you can use the fold operator `~`, the append operator `++`, and the `+` operator for string concatenation to perform complex transformations on lists in the "calculette" language.
+
 
 !!
