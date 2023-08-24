@@ -1,7 +1,7 @@
 # PSCalculette
 Just a toy progamming language in powershell
 
-Code exemple\
+## Code exemple
 Simple calcul:
 ```
 2 + 3
@@ -115,6 +115,127 @@ comma is now a new operator
 "a" comma 3 comma "b"
 > a, 3, b
 ```
+
+## Functions:
+
+### Notation
+In the "calculette" programming language, the approach to defining functions closely mirrors mathematical notation. This design choice provides a clear and intuitive way to create functions and express computations.
+
+In mathematical notation, functions are often defined using symbols and equations. "Calculette" embraces this concept by allowing you to define functions using a syntax that resembles mathematical equations. Here's how function definitions work in "calculette":
+
+```calculette
+function_name(parameter) = expression
+```
+
+- `function_name` is the name of the function you're defining.
+- `parameter` is the input variable that the function accepts.
+- `expression` is the mathematical expression that defines the function's behavior.
+
+For example, if you want to define a function `f(x)` that doubles the input value `x`, you can do so using this notation:
+
+```calculette
+f(x) = 2 * x
+```
+
+This approach not only makes function definitions more concise but also aligns with how functions are presented in mathematical contexts. It allows programmers to focus on the logic of the computation rather than the intricacies of programming syntax.
+
+By using mathematical notation for function definitions, "calculette" makes it easier for developers, especially those familiar with mathematics, to transition into writing code and expressing complex operations in a more natural and intuitive manner.
+
+In the "calculette" programming language, functions are designed to have only one parameter. This design choice simplifies function definitions and aligns with the language's goal of using concise and intuitive mathematical notation.
+
+Each function in "calculette" takes a single parameter, which is specified within the function's definition. For instance, defining a function `f(x)` would look like this:
+
+```calculette
+f(x) = expression
+```
+
+However, there are scenarios where you might want to work with functions that appear to take multiple parameters. In "calculette," you can achieve this by using lambdas.
+
+Lambdas in "calculette" are functions defined inline, often to perform specific operations on data. By nesting lambdas, you can emulate functions that take multiple parameters. Here's how it works:
+
+Suppose you want to define a function that calculates the sum of two numbers, `add(x, y)`. In "calculette," you can achieve this using nested lambdas:
+
+```calculette
+add = _(x) = _(y) = x + y
+```
+
+In this example:
+- `_(x)` defines a lambda that takes the first parameter `x`.
+- `_(y)` defines a nested lambda that takes the second parameter `y`.
+- `x + y` is the expression that performs the addition.
+
+You can also use the notation:
+```
+add(x) = _(y) = x + y
+```
+
+Now, you can use the `add` function as if it takes two parameters:
+
+```calculette
+result = add(3)(5)
+> 8
+```
+You can also use the dot `.` and the pipe `|` operators to acheave the same result
+```
+add("a")."b"
+> ab
+
+add."a"("b")
+> ERROR
+
+add."a"."b"
+> ab
+
+"b" | add("a")
+> ab
+
+"a" | add."b"
+> ab
+```
+
+While functions in "calculette" are designed to accept a single parameter, the ability to nest lambdas provides a way to achieve the effect of functions with multiple parameters. This approach maintains the simplicity and elegance of the language's syntax while offering flexibility in defining complex operations.
+
+### Function as operator
+
+In the "calculette" programming language, functions are typically defined with a single parameter. However, there's a convenient notation that allows you to use a two-parameter function as an operator to perform operations on values.
+
+Using the notation ``` `function: value ```, you can apply the two-parameter function to a specific value. This effectively treats the function as an operator that takes one value as its second argument. Here's how it works:
+
+Suppose you have a two-parameter function `add(x)=_(y)` that calculates the sum of `x` and `y`. In "calculette," you can use this function as an operator by applying it to a specific value:
+
+```calculette
+result = 3 `add: 5
+```
+
+In this example:
+- `add` is the two-parameter function you want to use as an operator.
+- `3` is the first argument for the function.
+- `5` is the second argument for the function, provided using the `function: value` notation.
+
+The result of this operation will be `8`, which is the sum of `3` and `5`.
+
+This notation allows you to treat two-parameter functions as operators, making your code more concise and expressive. It's a powerful feature of the "calculette" language that enables you to work with functions in a flexible and intuitive way.
+
+In the "calculette" programming language, the `function: value` notation allows you to use functions with multiple parameters as operators. Let's consider a scenario where you have a function `derivative(n)= _(f)= _(x)` that calculates the derivative of another function at a specific point and for a given degree of differentiation.
+
+Suppose you have the following three-parameter function:
+```calculette
+derivative = _(n) = _(f) = _(x) = do_derivative_n_f_x
+```
+
+And you want to calculate the first derivative of the `square` function at `x = 2` using this `derivative` function. You can use the notation `function: value` as follows:
+
+```calculette
+result = square `derivative(1): 2
+```
+
+In this example:
+- `square` is the function you want to differentiate.
+- `derivative(1)` is the two-parameter function for calculating the first derivative.
+- `2` is the value at which you want to calculate the derivative.
+
+The result of this operation will be the value of the first derivative of the `square` function at `x = 2`.
+
 
 ## Operators:
 
