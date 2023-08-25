@@ -592,5 +592,8 @@ After the fold operation, `filtered_and_appended` will hold the value `(2!, 4!)`
 
 This example showcases how you can use the fold operator `~`, the append operator `++`, and the `+` operator for string concatenation to perform complex transformations on lists in the "calculette" language.
 
+### Custom operators
+
+In the dynamic landscape of the "calculette" programming language, an intriguing capability allows for the creation of operators at runtime, further enhancing its versatility. This is made possible through the notation `new_operator <- _(a) = _(b) = do_something_with(a)(b)`, enabling developers to craft custom operators tailored to specific functionalities. This versatile approach allows for the creation of operators using the nested lambdas notation with two parameters, or alternatively, by providing a calculation that results in a two-parameter function. This newfound operator can then be seamlessly integrated into your code, just like any other built-in operator. For instance, consider the scenario where a novel operator called `combine` is defined using the dynamic operator creation notation. Once created, the `combine` operator can be effortlessly employed in expressions, as exemplified by `result = x combine y`. This innovative feature empowers programmers to adapt the language to their unique needs, showcasing the flexibility and adaptability inherent to "calculette."
 
 !!
