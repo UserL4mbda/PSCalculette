@@ -236,6 +236,22 @@ In this example:
 
 The result of this operation will be the value of the first derivative of the `square` function at `x = 2`.
 
+### Partial evaluation
+
+Introducing a remarkable feature, the "calculette" programming language introduces partial evaluation for functions with multiple parameters. This functionality empowers programmers to efficiently construct new specialized functions by supplying only a subset of the necessary arguments. With partial evaluation, specific arguments within a function can be fixed, leading to the creation of a new function that requires fewer parameters, while retaining other arguments as constants. This concept closely mirrors mathematical principles and offers substantial advantages in terms of both code reusability and optimization. As an illustration, consider the `power` function, which computes the nth power of a number. Leveraging partial evaluation, developers can effortlessly create a new function named `square` by pre-setting the exponent value to 2 in the `power` function. This streamlined process enables the generation of custom-tailored functions for specific use cases. By embracing partial evaluation, programmers can streamline complex functions into more concise forms, dynamically generate specialized functions, and significantly enhance both the flexibility and efficiency of the language.
+
+**Example:**
+
+```calculette
+power = _(exponent) = _(base) = base ^ exponent
+# Partially evaluate power with exponent fixed to 2
+square = power(2)
+# This computes 5^2, resulting in 25
+result = square(5)
+```
+
+In this example, the `square` function is produced through the partial evaluation of the `power` function, with the exponent fixed at 2. When applied to the value `5`, it computes the square of `5`, yielding the result `25`. This vividly demonstrates how partial evaluation simplifies the creation of specialized functions, effectively improving code efficiency and clarity.
+
 
 ## Operators:
 
