@@ -729,10 +729,10 @@ Let's say we want to compute the sum of two numbers but also print a message dis
 ```calculette
 add_and_print(x) = _(y) = (print("Adding " + x + " and " + y); x + y)
 
-result = add_and_print(3, 4)
+result = add_and_print . 3 . 4
 > Adding 3 and 4
 
-print("Result: ", result)
+print("Result: " + result)
 > Result: 7
 ```
 
