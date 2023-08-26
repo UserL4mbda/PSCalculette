@@ -1804,11 +1804,11 @@ function ComputeFOLD {
             }
         }
         
-        $EvaluationLambda = [PSCustomObject]@{
-            Type  = 'FUNCTIONEVAL'
-            Left  = $lambda.Computation
-            Right = $ValeurClef
-        }
+#        $EvaluationLambda = [PSCustomObject]@{
+#            Type  = 'FUNCTIONEVAL'
+#            Left  = $lambda.Computation
+#            Right = $ValeurClef
+#        }
 #        $resultat = ComputeAST -Context $lambda.Context -AST $EvaluationLambda
 #        $Evaluation = ComputeFUNCTIONEVAL -Context $Context -lhs $RightComputation -rhs $LeftComputation.Context.Memory[$_]
         $resultat = ComputeFUNCTIONEVAL -Context $Context -lhs $lambda.Computation -rhs $ValeurClef
@@ -2085,11 +2085,13 @@ function ComputeMAP{
     $RightComputation = $rhs
 
     if($LeftComputation.Type -eq 'INTEGER' -or $RightComputation.Type -eq 'INTEGER'){
-        DiveIntoObject -Object $AST -depth 4
-        return [PSCustomObject]@{
-            Context = $Context
-            Computation = New-ASTError -Value "UNABLE TO MAP ON **$($AST.Type)**"
-        }
+      return ComputeModulo -lhs $LeftComputation -rhs $RightComputation -Context $Context
+
+#        DiveIntoObject -Object $AST -depth 4
+#        return [PSCustomObject]@{
+#            Context = $Context
+#            Computation = New-ASTError -Value "UNABLE TO MAP ON **$($AST.Type)**"
+#        }
     }
 
     if($LeftComputation.Type -eq 'STRING'){
@@ -2118,11 +2120,11 @@ function ComputeMAP{
 
     $NewMemory = @{}
     $LeftComputation.Context.Memory.Keys | Sort-Object |%{
-        $EvaluationAST = [PSCustomObject]@{
-            Type  = 'FUNCTIONEVAL'
-            Left  = $RightComputation
-            Right = $LeftComputation.Context.Memory[$_]
-        }
+#        $EvaluationAST = [PSCustomObject]@{
+#            Type  = 'FUNCTIONEVAL'
+#            Left  = $RightComputation
+#            Right = $LeftComputation.Context.Memory[$_]
+#        }
 #        $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
         $Evaluation = ComputeFUNCTIONEVAL -Context $Context -lhs $RightComputation -rhs $LeftComputation.Context.Memory[$_]
         $NewMemory.Add($_, $Evaluation.Computation)
