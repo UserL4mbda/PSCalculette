@@ -384,9 +384,30 @@ W
 ```
 
 ### Operator `%`
-The map operator.\
-It takes a list and a function and applies the function to each element of the list
+The map operator.
 
+In the realm of the "calculette" programming language, the `%` operator takes on the role of the map operator, serving as a powerful tool for applying a function to each element of a list. This operator is designed to transform a given list by systematically executing a specified function on each individual element within it. The syntax for using the map operator is as follows:
+
+```calculette
+new_list = original_list % _(element) = transformed_element
+```
+
+- `new_list` is the resulting list after the mapping operation.
+- `original_list` is the list that you intend to transform.
+- `_(element)` defines a lambda with the element parameter.
+- `transformed_element` represents the output of applying a transformation function to each element of the list.
+
+For instance, suppose you have a list of numbers `(1, 2, 3, 4)` and you want to square each number. You can utilize the map operator `%` in the following way:
+
+```calculette
+squared_list = (1, 2, 3, 4) % _(element) = element * element
+```
+
+In this example, the lambda `_(element) = element * element` signifies that each element of the original list should be squared. The resulting `squared_list` will then contain `(1, 4, 9, 16)`.
+
+The `%` map operator in "calculette" streamlines the process of applying transformations to list elements, showcasing its significance in simplifying list manipulation and promoting efficient coding practices.
+
+Other examples:
 ```
 f(x) = 3 * x + 2
 
@@ -408,9 +429,41 @@ star(x)= "*" + x + "*"
 > (*H*, *e*, *l*, *l*, *o*, * *, *w*, *o*, *r*, *l*, *d*, *!*)
 ```
 
+The modulo operator
+
+For numerics, `%` is the modulo operator
+```
+11 % 7
+> 4
+```
+
 ### Operator `&`
 The reduce operator.
 
+Within the "calculette" programming language, the `&` operator assumes the role of the reduce operator—a valuable tool for iteratively combining elements of a list into a single value. This operator is instrumental in condensing a list by applying a specified function sequentially to each element, cumulatively accumulating the result. The syntax for utilizing the reduce operator is as follows:
+
+```calculette
+result = list & _(accumulator) = _(element) = updated_accumulator
+```
+
+- `result` holds the final outcome of the reduction.
+- `list` is the list subjected to reduction.
+- `_(accumulator)` defines a lambda with the accumulator parameter.
+- `_(element)` defines a nested lambda with the element parameter.
+- `updated_accumulator` symbolizes the updated value of the accumulator after each iteration.
+
+To illustrate, imagine a scenario where you have a list of numbers `(1, 2, 3, 4)` and you intend to calculate their product. You can harness the power of the reduce operator `&` in the following manner:
+
+```calculette
+product = (1, 2, 3, 4) & _(acc) = _(element) = acc * element
+```
+
+In this example, the `_(acc) = _(element) = acc * element` nested lambdas represent the cumulative multiplication of each element with the accumulator. The `product` will yield the final result, which in this case would be `24` (1 * 2 * 3 * 4).
+
+By employing the `&` reduce operator, "calculette" significantly simplifies the process of iteratively combining elements to yield a single value, thereby showcasing its prowess in efficient list manipulation.
+
+
+Other examples:
 ```
 1..5 & _(a)=_(b)= a + b
 > 15
@@ -436,6 +489,35 @@ f(x) = 3 * x + 2
 ### Operator `!`
 The zip operator
 
+In the "calculette" programming language, the `!` operator serves as the zip operator, facilitating the merging of two lists element-wise to create a new list. This operator enables you to concurrently process corresponding elements from two lists while applying a specified function. The syntax for employing the zip operator is as follows:
+
+```calculette
+new_list = list1 : list2 ! _(element1) = _(element2) = what_to_do_with_elements
+```
+
+- `new_list` represents the resultant list after the zip operation.
+- `list1` and `list2` are the two lists intended for merging.
+- `_(element1)` defines a lambda with the parameter representing an element from `list1`.
+- `_(element2)` defines a nested lambda with the parameter representing an element from `list2`.
+- `what_to_do_with_elements` signifies the action or function to be applied to corresponding elements from both lists.
+
+For instance, imagine you have the following lists:
+```calculette
+names = "Alice", "Bob", "Charlie"
+ages = "25", "30", "28"
+```
+
+To pair each name with its corresponding age and generate descriptive statements, you can utilize the zip operator `!` as follows:
+
+```calculette
+name_age_pairs = names : ages ! _(name) = _(age) = name + " is " + age + " years old"
+```
+
+In this example, the nested lambdas `_(name) = _(age) = name + " is " + age + " years old"` work together to produce name-age pairs with descriptive text. The resulting `name_age_pairs` list will contain elements such as `"Alice is 25 years old"` and `"Bob is 30 years old"`.
+
+By harnessing the `!` zip operator, "calculette" simplifies the merging of elements from two lists, creating a new list with processed outcomes. This showcases the language's ability to parallelly process multiple lists, enhancing its versatility and effectiveness.
+
+Other examples:
 ```
 list1 = (1..6)
 > (1, 2, 3, 4, 5, 6)
