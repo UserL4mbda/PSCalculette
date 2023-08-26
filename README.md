@@ -712,6 +712,34 @@ After the fold operation, `filtered_and_appended` will hold the value `(2!, 4!)`
 
 This example showcases how you can use the fold operator `~`, the append operator `++`, and the `+` operator for string concatenation to perform complex transformations on lists in the "calculette" language.
 
+### Operator `;`
+#### The Sequential Evaluation Operator 
+**Controlling Expression Flow in Calculette**
+
+In Calculette, even the semicolon `;` serves as a distinctive operator that orchestrates the sequential evaluation of expressions. This operator allows developers to control the flow of computation by computing the first argument, subsequently evaluating the second argument, and finally discarding the result of the first computation while retaining the outcome of the second computation.
+
+Consider the following explanation and example of how the sequential evaluation operator operates in Calculette:
+
+**Explanation:**
+The sequential evaluation operator `;` focuses on executing a series of expressions in a step-by-step manner. When used, it ensures that the expressions are processed sequentially, with the first computation serving as a preliminary step that doesn't influence the final result. This operator is particularly useful in scenarios where you want to ensure certain side effects or intermediate computations occur before the main result is calculated.
+
+**Example:**
+Let's say we want to compute the sum of two numbers but also print a message displaying the values being added. In traditional programming languages, this might involve separate lines of code. However, Calculette's sequential evaluation operator enables a concise approach:
+
+```calculette
+add_and_print(x) = _(y) = (print("Adding " + x + " and " + y); x + y)
+
+result = add_and_print(3, 4)
+> Adding 3 and 4
+
+print("Result: ", result)
+> Result: 7
+```
+
+In this example, the `add_and_print` function leverages the `;` operator to first print the addition message, then calculate the sum. The print statement is a side effect that occurs before the main computation. This showcases how Calculette's sequential evaluation operator enhances code clarity by allowing developers to express both computation and side effects within a concise, sequential structure.
+
+The sequential evaluation operator `;` demonstrates Calculette's commitment to providing a unique blend of mathematical notation and functional programming concepts to streamline code expression while maintaining control over computation flow.
+
 ### Custom operators
 
 In the dynamic landscape of the "calculette" programming language, an intriguing capability allows for the creation of operators at runtime, further enhancing its versatility. This is made possible through the notation `new_operator <- _(a) = _(b) = do_something_with(a)(b)`, enabling developers to craft custom operators tailored to specific functionalities. This versatile approach allows for the creation of operators using the nested lambdas notation with two parameters, or alternatively, by providing a calculation that results in a two-parameter function. This newfound operator can then be seamlessly integrated into your code, just like any other built-in operator. For instance, consider the scenario where a novel operator called `combine` is defined using the dynamic operator creation notation. Once created, the `combine` operator can be effortlessly employed in expressions, as exemplified by `result = x combine y`. This innovative feature empowers programmers to adapt the language to their unique needs, showcasing the flexibility and adaptability inherent to "calculette."
