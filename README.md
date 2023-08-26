@@ -1,5 +1,8 @@
 # PSCalculette
-Just a toy progamming language in powershell
+Just a toy progamming language in powershell (according to me!).
+
+Here a ChatGPT thought about calculette:
+"Calculette is a programming language that combines mathematical notation and functional programming concepts to provide a concise and expressive way of performing computations and data manipulation. It features a range of built-in operators and operator functions that allow developers to compose, manipulate, and transform data in an intuitive and efficient manner. The language emphasizes the use of functions and operators as building blocks for creating complex operations, and it provides mechanisms for defining custom operators, lambdas with multiple parameters, and operator functions. With its focus on operator-driven programming, "calculette" aims to enhance code readability, encourage concise expression of algorithms, and offer a unique perspective on computation through a blend of mathematical notation and functional programming constructs."
 
 ## Code exemple
 Simple calcul:
@@ -687,5 +690,110 @@ This example showcases how you can use the fold operator `~`, the append operato
 ### Custom operators
 
 In the dynamic landscape of the "calculette" programming language, an intriguing capability allows for the creation of operators at runtime, further enhancing its versatility. This is made possible through the notation `new_operator <- _(a) = _(b) = do_something_with(a)(b)`, enabling developers to craft custom operators tailored to specific functionalities. This versatile approach allows for the creation of operators using the nested lambdas notation with two parameters, or alternatively, by providing a calculation that results in a two-parameter function. This newfound operator can then be seamlessly integrated into your code, just like any other built-in operator. For instance, consider the scenario where a novel operator called `combine` is defined using the dynamic operator creation notation. Once created, the `combine` operator can be effortlessly employed in expressions, as exemplified by `result = x combine y`. This innovative feature empowers programmers to adapt the language to their unique needs, showcasing the flexibility and adaptability inherent to "calculette."
+
+### Operators as function
+
+In the realm of the "calculette" programming language, an intriguing feature exists where each operator is accompanied by a corresponding function. This function's name is formed by prepending the operator with a backslash (`\`). This design allows for enhanced flexibility in manipulating operations and their arguments. For instance, consider the subtraction operator `-`. In "calculette," not only can you use the operator directly (`a - b`), but you can also leverage the `\-(a)(b)` function to achieve the same result. Additionally, "calculette" introduces another level of versatility by offering the `'-` function. This function ingeniously swaps the order of the arguments before applying the operator. For example, `'-(a)(b)` would execute `b - a`. This approach underscores "calculette's" commitment to providing developers with a comprehensive toolkit, enhancing code readability, and facilitating innovative problem-solving through intuitive constructs.
+
+In the "calculette" programming language, the use of operator functions provides an elegant way to streamline code while maintaining its readability. Consider a scenario where you have a list of numbers `(1, 2, 3, 4, 5)` and you want to calculate the product of all its elements. Traditionally, you could accomplish this using the following syntax:
+```calculette
+result = (1, 2, 3, 4, 5) & _(element1) = _(element2) = element1 * element2
+```
+However, "calculette" offers a more concise approach by introducing operator functions. The operator function corresponding to multiplication, denoted by `\*`, can be used in place of the lambda expressions. Here's the enhanced code:
+```calculette
+result = (1, 2, 3, 4, 5) & \*
+```
+In this example, the `\*` operator function effectively replaces the longer lambda expressions. This demonstrates how "calculette" empowers programmers to write code that is both compact and expressive. This feature not only enhances code efficiency but also encourages the adoption of intuitive and succinct programming practices.
+
+Additionally, in "calculette," strings are considered as lists of characters. The `+` operator performs concatenation on strings, allowing you to combine their characters. For instance, `'+("a")("b")` would yield `ba`. Interestingly, you can exploit this behavior to invert a string. By using the operator function `'+`, you can reverse a string's characters. For example, `"string" & '+` would yield the result `gnirts`, effectively inverting the string. This innovative approach to string manipulation further exemplifies "calculette's" commitment to providing versatile and powerful tools for developers.
+
+In the "calculette" programming language, the concept of function operators naturally paves the way for concise function definitions where parameters are implicitly understood. For instance, consider the task of defining a `reverse` function that, given a string, returns its reversed form.
+
+Traditionally, one might define the `reverse` function like this:
+```calculette
+reverse(text) = text & '+
+```
+Here, `&'+` swaps the characters in the string, effectively reversing it.
+
+However, "calculette" offers a more compact expression of the `reverse` function by leveraging function operators and their associated features. In this case, you can define the `reverse` function using the following notation:
+```calculette
+reverse = '&.'+
+```
+This seemingly intricate definition encapsulates a series of operator functions. To break it down:
+- `'&` represents the parameters swapped function for the reduce operator `&`, effectively reversing the order of parameters for subsequent operations.
+- `.` denotes the apply operator with slightly lower precedence than `(` and `)`. This operation `'&.'+` is the same as `'&('+)`
+- `'+` signifies the reversed function for the `+` operator, which, when applied to strings, concatenates them in reverse order.
+
+These examples showcase how the integration of function operators into function definitions leads to intuitive and succinct code structures in "calculette." The language's design encourages developers to embrace a powerful, operator-driven approach to create functions with implicit parameters, enhancing code conciseness and readability.
+
+## Example of code and explanation:
+
+```calculette
+# Global Definitions
+and <- '@; by <- '|; to <- '|
+
+# Calculation of the length of a list
+replace_each_element = '% @ \C
+
+calculate_sum = '&.\+
+
+length = (replace_each_element by 1) and calculate_sum
+
+# Intersection of 2 sets calculation
+
+are_equal = \=
+
+keep_elements_that <- \?
+
+belong(set_to_check)=_(element) = \B(length of (set_to_check keep_elements_that (are_equal to element)))
+
+intersection(set1)=_(set2) = set1 keep_elements_that (belong to set2)
+```
+
+Explanation of the provided "calculette" code, along with the usage of specific operator functions and notations:
+
+```calculette
+# Global Definitions
+and <- '@; by <- '|; to <- '|
+
+# Calculation of the length of a list
+replace_each_element = '% @ \C
+
+calculate_sum = '&.\+
+
+length = (replace_each_element by 1) and calculate_sum
+```
+
+This portion of the code sets up some global definitions and calculates the length of a list. The `and` operator is the reversed composition operator `'@`, allowing you to compose functions in reverse order. The `by` operator is the apply function `'|`, used to apply a function to its arguments. The `to` operator is also the apply function `'|`.
+
+The function `replace_each_element` is defined using the operator `%`, which applies a given function to each element of a list. In this case, the function `\C` is a constant function that takes two arguments and always returns the first one.
+
+The function `calculate_sum` is defined using the operator `&`, which is used to reduce a list using a given function. Here, the function `\+` is used, which effectively sums the elements of the list.
+
+The function `length` calculates the length of a list by first replacing each element with `1` using `replace_each_element`, and then calculating the sum of the resulting list using `calculate_sum`.
+
+Moving on to the next part of the code:
+
+```calculette
+# Intersection of 2 sets calculation
+
+are_equal = \=
+
+keep_elements_that <- \?
+
+belong(set_to_check)=_(element) = \B(length of (set_to_check keep_elements_that (are_equal to element)))
+
+intersection(set1)=_(set2) = set1 keep_elements_that (belong to set2)
+```
+
+This section of the code focuses on calculating the intersection of two sets. The `are_equal` function is defined using the operator `\=`, which checks if two values are equal.
+
+The function `keep_elements_that` is defined using the operator `\?`, which filters a list based on a given function. This function essentially selects elements that meet a certain criteria.
+
+The function `belong` checks if an element belongs to a set. It uses the `length` function (which we defined earlier) along with the `keep_elements_that` function and the `are_equal` function to determine membership.
+
+Finally, the `intersection` function calculates the intersection of two sets (`set1` and `set2`). It utilizes the `keep_elements_that` function to keep elements that `belong` to `set2`.
+
+The code exemplifies the power of custom operators, function compositions, operator functions, and logical functions in the "calculette" programming language. It elegantly showcases how these elements can be combined to perform meaningful operations such as calculating lengths and set intersections.
 
 !!
