@@ -253,6 +253,31 @@ result = square(5)
 
 In this example, the `square` function is produced through the partial evaluation of the `power` function, with the exponent fixed at 2. When applied to the value `5`, it computes the square of `5`, yielding the result `25`. This vividly demonstrates how partial evaluation simplifies the creation of specialized functions, effectively improving code efficiency and clarity.
 
+### More about Function Definition
+
+In the world of programming languages, the way we define functions and handle conditionals often involves a fair amount of syntax and boilerplate code. Consider the following JavaScript example:
+
+```javascript
+function f(x) {
+  if (x == 3) {
+    return 5;
+  }
+  return x + 1;
+}
+```
+
+This is a common pattern in many languages. However, Calculette takes a different approach, leveraging its unique mathematical notation to streamline these processes while maintaining readability.
+
+In Calculette, function definitions become remarkably concise and intuitive. The equivalent `f(x)` function can be elegantly defined as `f(x) = x + 1`. But what's truly intriguing is how Calculette handles conditionals. Where other languages require explicit `if` statements, Calculette adopts a more direct approach:
+
+```calculette
+f(x) = x + 1
+f(3) = 5
+```
+
+Here, the condition `x == 3` directly yields a return value of `5`. This concise representation eliminates the need for branching `if` statements and complex logic. By using this approach, Calculette demonstrates its commitment to marrying mathematics with programming, resulting in a syntax that's not only elegant but also insightful.
+
+This unique feature in Calculette streamlines the coding process, allowing developers to focus on the core mathematical essence of their algorithms without getting bogged down in syntactic details. The comparison with traditional languages highlights the power of Calculette's notation, showcasing how the language reimagines function definitions and conditionals with a fresh perspective.
 
 ## Operators:
 
