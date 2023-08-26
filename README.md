@@ -589,6 +589,16 @@ pipeline = analyze_data @ clean_data @ load_data
 result = pipeline(data)
 ```
 
+This approach ensures data flows through the functions in the order they are composed. However, "calculette" introduces an elegant way to enhance the readability of such pipelines. By employing custom operators and embracing the notion of operators as functions (which will be elaborated upon later), you can redefine the composition operator as:
+```calculette
+then <- '@
+```
+This enables you to express the pipeline in a more human-friendly manner:
+```calculette
+pipeline = load_data then clean_data then analyze_data
+```
+Here, the `then` operator mirrors the `@` operator, preserving the flow of data through functions but presenting a cleaner, more intuitive syntax. This exemplifies "calculette's" commitment to empowering developers with flexible and readable code constructs. The concept of operators as functions further enriches the language's expressive power and showcases its adaptability to various coding styles.
+
 ### Operator `++`
 The append operator
 
