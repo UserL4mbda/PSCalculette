@@ -330,14 +330,14 @@ The same as `+` except you can't multiply 2 strings
 The same as `*`
 
 ### Operator `%%`
-The modulo operator
+#### The modulo operator
 ```
 11 %% 7
 > 4
 ```
 
 ### Operator `..`
-The range operator\
+#### The range operator
 It creates a list
 ```
 4..8
@@ -345,6 +345,7 @@ It creates a list
 ```
 
 ### Operator `,`
+#### The list operator
 It creates a list
 ```
 2,8,7,"Hello","world!",5
@@ -352,6 +353,7 @@ It creates a list
 ```
 
 ### Operator `.`, `|`, `()`
+#### The apply and pipe operators
 These operators apply an argument to a function, or at least something that looks like a function.\
 Be careful of operator precedence. `.`,`|` have the same precedence and `()` has the highest precedence
 ```
@@ -410,7 +412,7 @@ W
 ```
 
 ### Operator `%`
-The map operator.
+#### The map operator.
 
 In the realm of the "calculette" programming language, the `%` operator takes on the role of the map operator, serving as a powerful tool for applying a function to each element of a list. This operator is designed to transform a given list by systematically executing a specified function on each individual element within it. The syntax for using the map operator is as follows:
 
@@ -455,7 +457,7 @@ star(x)= "*" + x + "*"
 > (*H*, *e*, *l*, *l*, *o*, * *, *w*, *o*, *r*, *l*, *d*, *!*)
 ```
 
-The modulo operator
+#### The modulo operator
 
 For numerics, `%` is the modulo operator
 ```
@@ -464,7 +466,7 @@ For numerics, `%` is the modulo operator
 ```
 
 ### Operator `&`
-The reduce operator.
+#### The reduce operator.
 
 Within the "calculette" programming language, the `&` operator assumes the role of the reduce operator—a valuable tool for iteratively combining elements of a list into a single value. This operator is instrumental in condensing a list by applying a specified function sequentially to each element, cumulatively accumulating the result. The syntax for utilizing the reduce operator is as follows:
 
@@ -513,7 +515,7 @@ f(x) = 3 * x + 2
 ```
 
 ### Operator `!`
-The zip operator
+#### The zip operator
 
 In the "calculette" programming language, the `!` operator serves as the zip operator, facilitating the merging of two lists element-wise to create a new list. This operator enables you to concurrently process corresponding elements from two lists while applying a specified function. The syntax for employing the zip operator is as follows:
 
@@ -565,7 +567,7 @@ list1 : list2 ! \+
 ```
 
 ### Operator `??`
-The filter operator
+#### The filter operator
 
 In the "calculette" programming language, the `??` operator is the filter operator. It allows you to filter elements from a list based on a specified condition. The operator works as follows:
 
@@ -592,7 +594,7 @@ The `??` filter operator is a powerful tool in the "calculette" language for sel
 
 
 ### Operator `@`
-The composition operator
+#### The composition operator
 
 The `@` operator enables you to seamlessly combine two functions, let's call them `f` and `g`, to create a new function that applies `f` to the result of applying `g` to its input.
 
@@ -626,7 +628,7 @@ pipeline = load_data then clean_data then analyze_data
 Here, the `then` operator mirrors the `@` operator, preserving the flow of data through functions but presenting a cleaner, more intuitive syntax. This exemplifies "calculette's" commitment to empowering developers with flexible and readable code constructs. The concept of operators as functions further enriches the language's expressive power and showcases its adaptability to various coding styles.
 
 ### Operator `++`
-The append operator
+#### The append operator
 
 
 In the calculette programming language, you can use the "append" operator denoted as `++` to add an element to the end of a list. This operator is useful for extending lists dynamically.
@@ -652,7 +654,7 @@ After this operation, `newlist` would become `(1, 2, 3, 4)`.
 The "append" operator simplifies the process of adding elements to lists in the calculette language, making list manipulation more intuitive and straightforward.
 
 ### Operator `~`
-The fold operator
+#### The fold operator
 
 The fold operator, denoted as `~`, is a powerful tool for aggregating values in a list. The fold operation has the form: `list ~ accu : _([element]) = [action]`.
 
@@ -743,7 +745,7 @@ However, "calculette" offers a more compact expression of the `reverse` function
 reverse = '&.'+
 ```
 This seemingly intricate definition encapsulates a series of operator functions. To break it down:
-- `'&` represents the parameters swapped function for the reduce operator `&`, effectively reversing the order of parameters for subsequent operations.
+- `'&` represents the parameters swapped function for the reduce operator `&`
 - `.` denotes the apply operator with slightly lower precedence than `(` and `)`. This operation `'&.'+` is the same as `'&('+)`
 - `'+` signifies the reversed function for the `+` operator, which, when applied to strings, concatenates them in reverse order.
 
