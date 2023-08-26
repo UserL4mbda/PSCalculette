@@ -4,24 +4,34 @@ Just a toy progamming language in powershell (according to me!).
 Here a ChatGPT thought about calculette:
 "Calculette is a programming language that combines mathematical notation and functional programming concepts to provide a concise and expressive way of performing computations and data manipulation. It features a range of built-in operators and operator functions that allow developers to compose, manipulate, and transform data in an intuitive and efficient manner. The language emphasizes the use of functions and operators as building blocks for creating complex operations, and it provides mechanisms for defining custom operators, lambdas with multiple parameters, and operator functions. With its focus on operator-driven programming, "calculette" aims to enhance code readability, encourage concise expression of algorithms, and offer a unique perspective on computation through a blend of mathematical notation and functional programming constructs."
 
-## Code exemple
-Simple calcul:
-```
+## Introduction to Calculette
+
+Welcome to Calculette, a unique programming language that merges mathematical notation with functional programming principles to provide an intuitive and expressive way of performing computations and data manipulation. In Calculette, the focus is on creating elegant and concise code using a combination of operators, functions, and lambdas.
+
+Let's dive into some code examples that showcase the key features of Calculette:
+
+### Simple Calculations
+You can perform basic arithmetic operations like addition, multiplication, and division in Calculette:
+
+```calculette
 2 + 3
 3 * 2
 5 / 4
 ```
-Function definition:
-```
-f(x) = 3*x-5
-```
-And to apply the function f to the value 4
-```
+
+### Function Definitions and Application
+Define functions using the traditional notation and apply them to values:
+
+```calculette
+f(x) = 3 * x - 5
 f(4)
 > 7
 ```
-Or you can use the dot or the pipe or even the `de`  operator:
-```
+
+### Flexible Function Application
+Calculette offers various ways to apply functions, such as using the dot, pipe, or `de` operator:
+
+```calculette
 f.4
 > 7
 4 | f
@@ -29,41 +39,36 @@ f.4
 f de 4
 > 7
 ```
-You can simulate multiple arguments with lambdas:
-```
-add(x) = _(y) = x+y
-```
-To apply add to 2 and 3
-```
+
+### Lambdas for Multiple Arguments
+You can simulate functions with multiple arguments using lambdas:
+
+```calculette
+add(x) = _(y) = x + y
 add(2)(3)
 > 5
 ```
 
-```
-f(x) = 3*x-5
-g(x) = 2*x
-derive(f)=_(x)= ( epsilon=1/1000 ; ((f(x+epsilon) - f(x)) / epsilon ) )
+### Usage of Multiple Arguments and Partial Evaluation
+Calculette supports partial evaluation:
 
-derive(f)(3)
+```calculette
+f(x) = 3 * x - 5
+g(x) = 2 * x
+derivative(f) = _(x) = (epsilon = 1 / 1000; ((f(x + epsilon) - f(x)) / epsilon))
+
+derivative(f)(3)
 > 3.0000000000001137
 
-derive(f)(5)
-> 3.0000000000001137
-
-derive(g)(2)
-> 1.9999999999997797
-```
-One can use partial evaluation:
-```
-f' = derive(f)
+f' = derivative(f)
 f'(3)
 > 3.0000000000001137
 ```
-Boolean:
-0 is false, I know, it's a bad design!
 
-Conditional:
-```
+### Boolean and Conditionals
+Boolean values and conditionals can be used as well:
+
+```calculette
 1 ? "true" : "false"
 > true
 
@@ -71,46 +76,37 @@ Conditional:
 > false
 ```
 
-Conditional exemple with factorial (warning calculette does not implement tail recursion)
-```
-fact(n) = n ? n * fact(n-1) : 1
+### Factorial Example
+Implement factorials with conditionals, recursion, and point-free notation:
+
+```calculette
+fact(n) = n ? n * fact(n - 1) : 1
 fact(5)
 > 120
-```
-One can also write the factorial without the conditional:
-```
-fact(n) = n * fact(n-1)
+
+fact(n) = n * fact(n - 1)
 fact(0) = 1
 > 1
-
 fact(5)
 > 120
-```
-Another way to define factorial is to use the range operator ```..``` the reduce operator ```&``` and the multiplication function ```\*```
-```
+
 fact(n) = 1..n & \*
 fact(5)
 > 120
-```
-Instead of these operators one can use functions to write a point free definition of the factorial.
-- ```\R``` the function for the range operator
-- ```\*``` the function for the ```*``` operator
-- ```\&``` the function for the ```&``` operator but instead of ```\&``` we use ```'&``` defined as ```'&(x)=_(y)=(y&x)```
-- ```@``` the operator defined as ```(f @ g)(x) = (f(g(x)))```
-```
+
 fact = '&.\* @ \R(1)
 fact(5)
 > 120
 ```
 
-Calculette implements custom operators
-```
-insert(what)=_(prefix)=_(suffix)= "" + prefix + what + suffix
+### Custom Operators
+Calculette allows you to define and use custom operators:
+
+```calculette
+insert(what) = _(prefix) = _(suffix) = "" + prefix + what + suffix
 
 comma <- insert.", "
-```
-comma is now a new operator
-```
+
 "a" comma "b"
 > a, b
 3 comma 4
@@ -118,6 +114,8 @@ comma is now a new operator
 "a" comma 3 comma "b"
 > a, 3, b
 ```
+
+With its unique approach to mathematical notation and functional programming, Calculette provides an intriguing platform for concise and expressive coding. The language's emphasis on operators, functions, and lambdas empowers developers to craft elegant solutions to a wide range of computational challenges.
 
 ## Functions:
 
