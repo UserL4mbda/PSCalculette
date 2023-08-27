@@ -1920,7 +1920,15 @@ function ComputeREDUCE {
         }
     }
 
-    $Memoire       = $LeftComputation.Context.Memory
+    $Memoire = $LeftComputation.Context.Memory
+
+    if( ($Memoire -eq $null) -or ($Memoire.Count -eq 0) ) {
+      return [PSCustomObject]@{
+        Context     = $Context
+        Computation = New-ASTError -Value "REDUCE ON EMPTY LIST"
+      }
+    }
+
     $accu, $rest   = $Memoire.Keys | Sort-Object
     
     $ValeurAccu = $Memoire[$accu]
