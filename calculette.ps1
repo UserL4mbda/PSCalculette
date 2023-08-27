@@ -2052,18 +2052,18 @@ function ComputeFILTER {
     #Attention au probleme de key et keyCollection de Powershell
     #Voici une reponse possible:
     #https://stackoverflow.com/questions/26552453/powershell-hashtable-keys-property-doesnt-return-the-keys-it-returns-a-keycol
-    $Memory.GetEnumerator() | ForEach-Object {
-    $clef = $_.Key
-        $EvaluationAST = [PSCustomObject]@{
-            Type  = 'FUNCTIONEVAL'
-            Left  = $RightComputation
-            Right = $Memory[$clef]
-        }
-        $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
-        if($Evaluation.Computation.Value -ne 0) {
-          $NewMemory.Add($currentIndex, $Memory[$clef])
-          $currentIndex++
-        }
+    $Memory.GetEnumerator() | Sort-Object -Property Key | ForEach-Object {
+      $clef = $_.Key
+      $EvaluationAST = [PSCustomObject]@{
+          Type  = 'FUNCTIONEVAL'
+          Left  = $RightComputation
+          Right = $Memory[$clef]
+      }
+      $Evaluation = ComputeAST -Context $Context -AST $EvaluationAST
+      if($Evaluation.Computation.Value -ne 0) {
+        $NewMemory.Add($currentIndex, $Memory[$clef])
+        $currentIndex++
+      }
     }
 
     return [PSCustomObject]@{
