@@ -536,6 +536,7 @@ function DoParseMapReduce {
                 '!!' { 'BOUCLE'           }
                 '!'  { 'ZIP'              }
                 '??' { 'FILTER'           }
+                '^'  { 'POWER'            }
             }
             
             $typeCustom = $CustomOperators.Contains( $I.Value.Value ) ? 'OPERATORCUSTOM' : $false
@@ -555,7 +556,8 @@ function DoParseMapReduce {
 
         $ET       = (Get-Item 'function:New-ParserAnd').ScriptBlock
 
-        $OperatorBasic = New-ParserOr -LeftParser (New-ParserWord '??') -RightParser( New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))))))
+#        $OperatorBasic = New-ParserOr -LeftParser (New-ParserWord '??') -RightParser( New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) )))))))))
+        $OperatorBasic = New-ParserOr -LeftParser (New-ParserChar '^') -RightParser (New-ParserOr -LeftParser (New-ParserWord '??') -RightParser( New-ParserOr -LeftParser (New-ParserWord '!!') -RightParser( New-ParserOr -LeftParser (New-ParserWord '%%') -RightParser( New-ParserOr -LeftParser (New-ParserChar '.') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '!') -RightParser ( New-ParserOr -LeftParser (New-ParserChar '`') -RightParser (New-ParserOr -LeftParser (New-ParserWord 'de') -RightParser (New-ParserOr -LeftParser (New-ParserWord '++') -RightParser (New-ParserOr -LeftParser (New-ParserChar '~') -RightParser (New-ParserOr -LeftParser (New-ParserChar '|') -RightParser ( New-ParserOr -LeftParser (New-ParserChar -Char '%') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '&') -RightParser (New-ParserOR -LeftParser (New-ParserChar -Char '#') -RightParser (New-ParserChar -Char '@'))) ) ))))))))))
 
         $OperatorCustom = $CustomOperators | % { New-ParserWord $_ } | Reduce {New-ParserOr -LeftParser $args[0] -RightParser $args[1]}
 
@@ -1425,6 +1427,10 @@ function ComputeAST{
 
     if($AST.Type -eq 'DIVISION'){
         return (ComputeDIVISION -lhs $Left -rhs $Right -Context $NewContext)
+    }
+
+    if($AST.Type -eq 'POWER'){
+        return (ComputePOWER -lhs $Left -rhs $Right -Context $NewContext)
     }
 
     if($AST.Type -eq 'COMPARAISONSUP'){
@@ -3014,6 +3020,68 @@ function ComputeModulo {
     return [PSCustomObject]@{
         Context = $Context
         Computation = New-ASTInteger -Value ($lhs.Value % $rhs.Value)
+    }
+}
+
+function ComputePOWER {
+    param(
+        $lhs,
+        $rhs,
+        $Context
+    )
+
+    $left  = $lhs
+    $right = $rhs
+
+    if($left.Type -eq 'STRING' -or $right.Type -eq 'STRING'){
+        return [PSCustomObject]@{
+            Context     = $Context
+            #Computation = New-ASTInteger -Value $(if($left.Value -eq $right.Value){0}else{1})
+            Computation = New-ASTError -Value "Unable to power up $($left.Type) with $($ritht.Type)"
+        }
+    }
+
+    if($left.Type -eq 'INTEGER' -and $right.Type -eq 'INTEGER'){
+        return [PSCustomObject]@{
+            Context     = $Context
+            Computation = New-ASTInteger -Value ([Math]::Pow($left.Value , $right.Value))
+        }
+    }
+
+
+
+    if(($lhs.Type -eq 'INTEGER' -or $lhs.Type -eq 'STRING') -and (ASTTypeIS -AST $rhs -Type 'FUNCTION')) {
+
+      #On remplace la memory de la fonction constante qui est vide par une liste
+      #de constante (liste de meme longueur que celle de la fonction a multiplier)
+
+      $NewMemory = (New-ArrayOfElement -Size ($rhs.Context.Memory.Count) -Element $lhs)
+
+      #On transforme $lhs en fonction constante
+      $lhs = (New-ASTFunctionConstant $lhs)
+      $lhs.Context.Memory = $NewMemory
+    }
+
+    if(($rhs.Type -eq 'INTEGER' -or $rhs.Type -eq 'STRING') -and (ASTTypeIS -AST $lhs -Type 'FUNCTION')) {
+      #On ne fait pas la meme transformation que precedemment car l'algo de OperationSurFonction prend comme Memory de reference celle de fonction1
+      #On transforme $rhs en fonction constante
+      $rhs = (New-ASTFunctionConstant $rhs)
+    }
+
+    if((ASTTypeIs -AST $lhs -Type 'FUNCTION') -and (ASTTypeIs -AST $rhs -Type 'FUNCTION')){
+        return (OperationSurFonction -OperationType 'POWER' -fonction1 $lhs -fonction2 $rhs -Context $Context)
+        #return (MultiplieFonction -fonction1 $lhs -fonction2 $rhs -Context $Context)
+    }
+
+
+    Write-Host -ForegroundColor DarkRed "Error de calcul de puissance:"
+    Write-Host -ForegroundColor DarkRed "Dive Left"
+    DiveIntoObject -Object $left
+    Write-Host -ForegroundColor DarkRed "Dive Right"
+    DiveIntoObject -Object $right
+    return [PSCustomObject]@{
+        Context     = $Context
+        Computation = New-ASTError -Value "Left type: $($left.Type) et Right type: $($right.Type)"
     }
 }
 
