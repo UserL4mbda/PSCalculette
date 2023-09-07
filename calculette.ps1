@@ -1075,15 +1075,17 @@ function Calculette {
         "'P(x)=_(y)=(y,x)"
         #Boolean
         "\B(x)=(x?1:0)"
+        "'B(x)=(x?0:1)"
+        "\N(x)=(x?0:1)"
     )
 
     # Exemple de code:
-    # taille    = ( ('&(\+))`\O:('%(\C(1))) )
-    # lonngueur = ('~ (0 , 1|\+|\K))
-    # somme     = ('&(\+))
-    # moyenne   = (\Z. somme. \/ .taille  )
-    # moyenne   = (\Z. ('&(\+)) .\/. ('~(0, 1|\+|\K)))
-    # moyenne   = (\Z. '&(\+) .\/. '~(0, 1|\+|\K)) 
+    # taille   = ( ('&(\+))`\O:('%(\C(1))) )
+    # longueur = ('~ (0 , 1|\+|\K))
+    # somme    = ('&(\+))
+    # moyenne  = (\Z. somme. \/ .taille  )
+    # moyenne  = (\Z. ('&(\+)) .\/. ('~(0, 1|\+|\K)))
+    # moyenne  = (\Z. '&(\+) .\/. '~(0, 1|\+|\K)) 
 
     foreach($calcul in $Initialisation){
         $resultat = ($calcul | Convert-TextToParserInput | &(DoParseExecutable))
@@ -2699,56 +2701,56 @@ function OperationSurFonction {
   }
 }
 
-function MultiplieFonction {
-  param(
-    $fonction1,
-    $fonction2,
-    $Context
-  )
-
-  #Attention pour l'instant on considere que le 1er tableau est la reference
-  $MemoryReference = $fonction1.Context.Memory
-  $MemSize         = $MemoryReference.Count - 1
-  $NewMemory       = @{}
-
-  if($MemoryReference.Count -gt 0){
-    foreach ($index in (0..$MemSize)){
-      $left  = $MemoryReference[$index]
-      $right = (ComputeFUNCTIONEVAL -lhs $fonction2 -rhs (New-ASTInteger $index)).Computation
-
-#      $NewMemory.Add($index, (New-ASTInteger ($left.Value * $right.Value)))
-      $NewMemory.Add($index, (ComputeMULTIPLICATION -lhs $left -rhs $right -Context $Context).Computation)
-    }
-  }
-
-  return [PSCustomObject]@{
-      Context     = $Context
-      Computation = [PSCustomObject]@{
-        Type      = 'CLOSURE'
-        Context   = [PSCustomObject]@{
-          Parent = $null
-#          Values = $Context.Values
-          Values = @{}
-          Memory = $NewMemory
-        }
-        Parameters = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
-        Body       = [PSCustomObject]@{
-          Type  = 'MULTIPLICATION'
-          Left  = [PSCustomObject]@{
-                    Type  = 'FUNCTIONEVAL'
-                    Left  = $fonction1
-                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
-                  }
-          Right = [PSCustomObject]@{
-                    Type  = 'FUNCTIONEVAL'
-                    Left  = $fonction2
-                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
-                  }
-        }
-        Value      = "($($fonction1.Value)) * ($($fonction2.Value))"
-      }
-  }
-}
+#function MultiplieFonction {
+#  param(
+#    $fonction1,
+#    $fonction2,
+#    $Context
+#  )
+#
+##  Attention pour l'instant on considere que le 1er tableau est la reference
+#  $MemoryReference = $fonction1.Context.Memory
+#  $MemSize         = $MemoryReference.Count - 1
+#  $NewMemory       = @{}
+#
+#  if($MemoryReference.Count -gt 0){
+#    foreach ($index in (0..$MemSize)){
+#      $left  = $MemoryReference[$index]
+#      $right = (ComputeFUNCTIONEVAL -lhs $fonction2 -rhs (New-ASTInteger $index)).Computation
+#
+##      $NewMemory.Add($index, (New-ASTInteger ($left.Value * $right.Value)))
+#      $NewMemory.Add($index, (ComputeMULTIPLICATION -lhs $left -rhs $right -Context $Context).Computation)
+#    }
+#  }
+#
+#  return [PSCustomObject]@{
+#      Context     = $Context
+#      Computation = [PSCustomObject]@{
+#        Type      = 'CLOSURE'
+#        Context   = [PSCustomObject]@{
+#          Parent = $null
+##          Values = $Context.Values
+#          Values = @{}
+#          Memory = $NewMemory
+#        }
+#        Parameters = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+#        Body       = [PSCustomObject]@{
+#          Type  = 'MULTIPLICATION'
+#          Left  = [PSCustomObject]@{
+#                    Type  = 'FUNCTIONEVAL'
+#                    Left  = $fonction1
+#                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+#                  }
+#          Right = [PSCustomObject]@{
+#                    Type  = 'FUNCTIONEVAL'
+#                    Left  = $fonction2
+#                    Right = [PSCustomObject]@{Type = 'IDENTIFIANT'; Value = 'x'}
+#                  }
+#        }
+#        Value      = "($($fonction1.Value)) * ($($fonction2.Value))"
+#      }
+#  }
+#}
 
 function New-ArrayOfElement {
   param(
