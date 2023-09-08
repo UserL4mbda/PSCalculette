@@ -103,7 +103,7 @@ function New-LexerID{
         #if($txt[$index] -eq '\'){
         if($txt[$index] -eq '\' -or $txt[$index] -eq "'"){
             $n = $txt[$index + 1]
-            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P' -or $n -eq 'R' -or $n -eq 'B' -or $n -eq '>' -or $n -eq '<'){
+            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P' -or $n -eq 'R' -or $n -eq 'B' -or $n -eq '>' -or $n -eq '<' -or $n -ceq 'L'){
                 $Value = $txt[$index] + $txt[$index + 1]
             }
             return [PSCustomObject]@{
@@ -1058,6 +1058,7 @@ function Calculette {
         "\C(x)=_(y)=x"
         "'C(x)=_(y)=y"
         "longueur(liste) = (liste ~ ( 0 : ( 1 | \+ | \K ) ) )"
+        "\L = longueur"
         "\~(liste)=_(accu_fn)= (liste ~ (accu_fn(0) : accu_fn(1) ))"
         "'~(accu_fn)=_(liste)= (liste ~ (accu_fn(0) : accu_fn(1) ))"
         "\&(liste)=_(fn)= (liste & fn)"
@@ -1934,6 +1935,13 @@ function ComputeREDUCE {
       return [PSCustomObject]@{
         Context     = $Context
         Computation = New-ASTError -Value "REDUCE ON EMPTY LIST"
+      }
+    }
+
+    if( ($Memoire.Count -eq 1) ) {
+      return [PSCustomObject]@{
+        Context     = $Context
+        Computation = $Memoire[0]
       }
     }
 
