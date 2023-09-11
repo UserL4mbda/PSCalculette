@@ -122,14 +122,18 @@ function New-LexerID{
         #Fin du HACK
 
         if($txt[$index] -notmatch "[a-zA-Z_!']"){ return }
-        #BUG?: le caractere ']' passe a travers le notmatch
+        #BUG?: le caractere ']' et d'autres passent a travers le notmatch
         if($txt[$index] -eq ']'){ return }
+        if($txt[$index] -eq '['){ return }
+        if($txt[$index] -eq '^'){ return }
 #Write-Host "LEXERID: Value '$($txt[$index])' OK"
         $Value = $txt[$index]
         for($i = 1; $i -lt $txt.Length;$i++){
             if($txt[$index + $i] -notmatch "[a-zA-z0-9_!']"){ break }
-            #BUG?: le caractere ']' passe a travers le notmatch
-            if($txt[$index + $i] -eq ']'){ break }
+            #BUG?: le caractere ']' et d'autres  passe a travers le notmatch
+            if($txt[$index + $i] -eq ']') { break }
+            if($txt[$index + $i] -eq '[') { break }
+            if($txt[$index + $i] -eq '^') { break }
 #Write-Host "LEXERID: Value '$($txt[$index + $i])' OK"
             $Value += $txt[$index + $i]
         }
@@ -963,6 +967,13 @@ function trim {
   New-ASTString -value ($value.Value.trim())
 }
 
+function RandomDice {
+  param(
+    $value
+  )
+  New-ASTInteger -Value (Get-Random -Minimum 1 -Maximum $value.Value)
+}
+
 function Object2Text{
   param(
     $object
@@ -1025,6 +1036,7 @@ function Calculette {
             'test_teamviewer_id'   = New-ASTExternalfunc -Func $Function:test_teamviewer_id 
             'read_file'            = New-ASTExternalfunc -Func $Function:read_file
             'trim'                 = New-ASTExternalfunc -Func $Function:trim
+            'dice'                 = New-ASTExternalfunc -Func $Function:RandomDice
         }
     }
 
@@ -2494,20 +2506,20 @@ function ComputeCOMMA {
     }
 }
 
-function ComputeASSIGNATION {
-    param(
-        $lhs,
-        $rhs,
-        $Context
-    )
-    if($lhs.Type -eq 'IDENTIFIANT'){
-        $computation = (ComputeAST -AST $rhs -Context $Context)
-        $NeoContext  = $computation.Context
-        $NeoContext.Values[$lhs.Value] = $computation.Computation
-        return $computation
-    }
-    return New-ASTError -Value "Le LHS d'une ASSIGNATION doit etre un IDENTIFIANT"
-}
+#function ComputeASSIGNATION {
+#    param(
+#        $lhs,
+#        $rhs,
+#        $Context
+#    )
+#    if($lhs.Type -eq 'IDENTIFIANT'){
+#        $computation = (ComputeAST -AST $rhs -Context $Context)
+#        $NeoContext  = $computation.Context
+#        $NeoContext.Values[$lhs.Value] = $computation.Computation
+#        return $computation
+#    }
+#    return New-ASTError -Value "Le LHS d'une ASSIGNATION doit etre un IDENTIFIANT"
+#}
 
 #COMPUTEASSIGNATIONOPERATOR 
 function ComputeASSIGNATIONOPERATOR {
@@ -2632,23 +2644,27 @@ function ComputeROND{
     #
 
     $closure = [PSCustomObject]@{
-        Type    = 'CLOSURE'
-        Context = [PSCustomObject]@{
-            Parent = $Context
-	    Values = $Context.Values
-            Memory = @{}
+      Type       = 'CLOSURE'
+      
+      Context    = [PSCustomObject]@{
+        Parent  = $Context
+        Values  = $Context.Values
+        Memory  = @{}
+      }
+
+      Parameters = (New-ASTIdentifiant -Identifiant 'x')
+
+      Body = [PSCustomObject]@{
+        Type  = 'FUNCTIONEVAL'
+        Left  = $lhs.PsObject.Copy()
+        Right =	[PSCustomObject]@{
+          Type  = 'FUNCTIONEVAL'
+          Left  = $rhs.PsObject.Copy()
+          Right = New-ASTIdentifiant -Identifiant 'x'
         }
-        Parameters = (New-ASTIdentifiant -Identifiant 'x')
-	Body       = [PSCustomObject]@{
-		Type  = 'FUNCTIONEVAL'
-		Left  = $lhs
-		Right =	[PSCustomObject]@{
-			Type  = 'FUNCTIONEVAL'
-			Left  = $rhs
-			Right = New-ASTIdentifiant -Identifiant 'x'
-		}
-	}
-        Value      = "Fonction composee de $($lhs.Value) et de $($rhs.Value)"
+      }
+
+      Value      = "Fonction composee de $($lhs.Value) et de $($rhs.Value)"
     }
 
     return [PSCustomObject]@{
