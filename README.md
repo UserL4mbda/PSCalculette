@@ -1,3 +1,15 @@
+BUG:
+```
+p2=\+(2)@\R(0)
+
+>: p2.2
+(2, 3, 4)
+
+>: p2.2
+(4)
+>
+```
+
 # PSCalculette
 Just a toy progamming language in powershell (according to me!).
 
