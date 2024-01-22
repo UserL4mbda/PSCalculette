@@ -103,7 +103,7 @@ function New-LexerID{
         #if($txt[$index] -eq '\'){
         if($txt[$index] -eq '\' -or $txt[$index] -eq "'"){
             $n = $txt[$index + 1]
-            if($n -eq '^' -or $n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P' -or $n -eq 'R' -or $n -eq 'B' -or $n -eq '>' -or $n -eq '<'){
+            if($n -eq '+' -or $n -eq '*' -or $n -eq '-' -or $n -eq '/' -or $n -eq '@' -or $n -eq '.' -or $n -eq '?' -or $n -eq '=' -or $n -ceq 'S' -or $n -eq '|' -or $n -ceq 'K' -or $n -ceq 'Z' -or $n -ceq 'z' -or $n -ceq 'I' -or $n -eq '~' -or $n -eq '&' -or $n -eq '%' -or $n -eq 'C' -or $n -eq 'O' -or $n -eq 'W' -or $n -eq 'P' -or $n -eq 'R' -or $n -eq 'B' -or $n -eq '>' -or $n -eq '<'){
                 $Value = $txt[$index] + $txt[$index + 1]
             }
             return [PSCustomObject]@{
@@ -1037,8 +1037,6 @@ function Calculette {
         "'*(x)=_(y)=(y*x)"
         "\/(x)=_(y)=(x/y)"
         "'/(x)=_(y)=(y/x)"
-        "\^(x)=_(y)=(x ^ y)"
-        "'^(x)=_(y)=(y ^ x)"
         "\@(x)=_(y)=(x@y)"
         "'@(x)=_(y)=(y@x)"
         "\|(x)=_(y)=(x|y)"
