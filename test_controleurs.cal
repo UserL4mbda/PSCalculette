@@ -1,0 +1,58 @@
+nom      = 0;
+fonction = 1;
+statut   = 2
+
+Users = {} ++
+    (user1 = ("Toto", "Admin",      1)) ++
+    (user2 = ("Titi", "Admin",      1)) ++
+    (user3 = ("Riri", "User",       1)) ++
+    (user4 = ("Fifi", "Controleur", 1)) ++
+    (user5 = ("Lulu", "Controleur", 0)) ++
+    (user6 = ("Mumu", "Admin",      0))
+
+# Renvoit un bool indiquant si 'utilisateur' est de type 'type'
+UtilisateurType(type) = _(utilisateur) = (\=(utilisateur.fonction)(type))
+
+#Tableau des controleur (un controleur renvoie bool)
+#UtilisateurActif(utilisateur) = utilisateur.statut
+ctrl("actif")       = UtilisateurActif      = \|(statut);
+ctrl("admin")       = UtilisateurAdmin      = UtilisateurType("Admin");
+ctrl("utilisateur") = UtilisateurUser       = UtilisateurType("User");
+ctrl("controleur")  = UtilisateurControleur = UtilisateurType("Controleur")
+
+ControlOP(operateur) = _(controls) = _(utilisateur) = ((controls % \|(utilisateur)) & operateur)
+
+ControlEt = ControlOP(\*);
+ControlOu = ControlOP(\+)
+
+ControlNon(control) = \N @ control 
+
+#On peut ainsi ajouter la notion d'inactif
+ctrl("inactif")     = ControlNon.UtilisateurActif
+
+#Exemple d'utilisation de ControlOu et ControlEt
+#controlCTRLUSR = ControlOu(UtilisateurControleur, UtilisateurUser)
+#control = ControlEt( UtilisateurActif, ControlOu(UtilisateurControleur, UtilisateurUser))
+
+# bool renvoit si 'element' appartient a 'lst'
+match(lst) = _(element) = \B(lst % \=(element) & \+)
+
+est_control = match("admin", "utilisateur", "controleur", "actif", "inactif")
+
+buildRequestOU(request) = ControlOu(request / "ou" % trim % _(index)=ctrl(index))
+
+getRequest(request) = est_control(request)? ctrl(request) : buildRequestOU(request)
+
+buildRequest(request) = ControlEt(request / "et" % trim % getRequest)
+
+#test_control_or_operator(element) = \B(est_control(element) + match("et", "ou")(element))
+test_control_or_operator = \B @ (\Z. est_control .\+. match("et", "ou"))
+
+testRequest(request) = \B(request / " " % trim % test_control_or_operator & \*)
+
+
+# Exemple de request: "actif et utilisateur ou controleur"
+run(_) = (
+    \N(testRequest(request = input("Entrez votre demande")))? (affichenl."Syntax Error";{}):
+    Users ?? buildRequest(request)
+)
