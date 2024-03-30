@@ -974,6 +974,13 @@ function RandomDice {
   New-ASTInteger -Value (Get-Random -Minimum 1 -Maximum $value.Value)
 }
 
+function ReadInput {
+    param(
+        $value
+    )
+    New-ASTString -Value (Read-Host $value.Value)
+}
+
 function Object2Text{
   param(
     $object
@@ -1037,6 +1044,7 @@ function Calculette {
             'read_file'            = New-ASTExternalfunc -Func $Function:read_file
             'trim'                 = New-ASTExternalfunc -Func $Function:trim
             'dice'                 = New-ASTExternalfunc -Func $Function:RandomDice
+            'input'                = New-ASTExternalfunc -Func $Function:ReadInput
         }
     }
 
