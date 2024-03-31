@@ -39,14 +39,19 @@ match(lst) = _(element) = \B(lst % \=(element) & \+)
 
 est_control = match("admin", "utilisateur", "controleur", "actif", "inactif")
 
-buildRequestOU(request) = ControlOu(request / "ou" % trim % _(index)=ctrl(index))
+getRequestNON(request) = ControlNON(ctrl(((request / " ") ?? _(e)=\N(\=(e)(""))).1))
+
+buildRequestNON(request) = est_control(request)? ctrl(request) : getRequestNON(request)
+
+#buildRequestOU(request) = ControlOu(request / "ou" % trim % _(index)=ctrl(index))
+buildRequestOU(request) = ControlOu(request / "ou" % trim % _(index)=buildRequestNON(index))
 
 getRequest(request) = est_control(request)? ctrl(request) : buildRequestOU(request)
 
 buildRequest(request) = ControlEt(request / "et" % trim % getRequest)
 
 #test_control_or_operator(element) = \B(est_control(element) + match("et", "ou")(element))
-test_control_or_operator = \B @ (\Z. est_control .\+. match("et", "ou"))
+test_control_or_operator = \B @ (\Z. est_control .\+. match("et", "ou", "non"))
 
 testRequest(request) = \B(request / " " % trim % test_control_or_operator & \*)
 
